@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  # 1. PostgreSQL Veritabanı Servisi
+  postgres:
+    image: postgres:16
+    container_name: aipage_postgres
+    restart: always
+    environment:
+      POSTGRES_DB: aipage_db
+      POSTGRES_USER: koru_user
+      POSTGRES_PASSWORD: koru_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # 2. pgAdmin Yönetim Paneli Servisi
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: aipage_pgadmin
+    restart: always
+    environment:
+      # pgAdmin paneline giriş için kullanacağın bilgiler
+      PGADMIN_DEFAULT_EMAIL: admin@korusigorta.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:
