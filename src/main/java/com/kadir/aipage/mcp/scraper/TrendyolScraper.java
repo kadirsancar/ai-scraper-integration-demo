@@ -12,6 +12,7 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Duration;
 
 @Component
@@ -36,22 +37,15 @@ public class TrendyolScraper implements ECommerceScraper {
         WebDriver driver = null;
 
         try {
-
-            ChromeOptions options = new ChromeOptions();
-
-            // Şimdilik test için headless kapalı.
-            // Her şey çalıştıktan sonra tekrar açabiliriz.
-            // options.addArguments("--headless=new");
-
-            options.addArguments("--window-size=1920,1080");
-            options.setPageLoadStrategy(PageLoadStrategy.EAGER);
+            ChromeOptions options = createChromeOptions();
 
             driver = new ChromeDriver(options);
-
             driver.get(searchUrl);
 
-            WebDriverWait wait =
-                    new WebDriverWait(driver, Duration.ofSeconds(10));
+            WebDriverWait wait = new WebDriverWait(
+                    driver,
+                    Duration.ofSeconds(10)
+            );
 
             WebElement firstProduct = wait.until(
                     ExpectedConditions.presenceOfElementLocated(
@@ -61,13 +55,9 @@ public class TrendyolScraper implements ECommerceScraper {
 
             String href = firstProduct.getAttribute("href");
 
-            String productUrl;
-
-            if (href.startsWith("http")) {
-                productUrl = href;
-            } else {
-                productUrl = "https://www.trendyol.com" + href;
-            }
+            String productUrl = href.startsWith("http")
+                    ? href
+                    : "https://www.trendyol.com" + href;
 
             System.out.println("Arama sonucu ürün URL: " + productUrl);
 
@@ -103,6 +93,9 @@ public class TrendyolScraper implements ECommerceScraper {
         String productName = "Bilinmeyen Trendyol Ürünü";
 
         BigDecimal currentPrice = null;
+        BigDecimal originalPrice = null;
+
+        String discountInfo = null;
 
         long driverInitMs = 0;
         long pageLoadMs = 0;
@@ -111,34 +104,22 @@ public class TrendyolScraper implements ECommerceScraper {
 
         try {
 
-            // ==================================================
+            // =====================================================
             // 1. CHROME BAŞLAT
-            // ==================================================
+            // =====================================================
 
             long stepStart = System.currentTimeMillis();
 
-            ChromeOptions options = new ChromeOptions();
-
-            // Şimdilik headless kapalı.
-            // Testler bittikten sonra açabiliriz.
-            // options.addArguments("--headless=new");
-
-            options.addArguments("--disable-gpu");
-            options.addArguments("--no-sandbox");
-            options.addArguments("--disable-dev-shm-usage");
-            options.addArguments("--window-size=1920,1080");
-
-            options.setPageLoadStrategy(PageLoadStrategy.EAGER);
+            ChromeOptions options = createChromeOptions();
 
             driver = new ChromeDriver(options);
 
-            driverInitMs =
-                    System.currentTimeMillis() - stepStart;
+            driverInitMs = System.currentTimeMillis() - stepStart;
 
 
-            // ==================================================
+            // =====================================================
             // 2. ÜRÜN SAYFASINI AÇ
-            // ==================================================
+            // =====================================================
 
             stepStart = System.currentTimeMillis();
 
@@ -147,33 +128,19 @@ public class TrendyolScraper implements ECommerceScraper {
             } catch (Exception ignored) {
             }
 
-            System.out.println(
-                    "CURRENT URL: " + driver.getCurrentUrl()
-            );
-
-            System.out.println(
-                    "TITLE: " + driver.getTitle()
-            );
-
-            System.out.println(
-                    "PAGE SOURCE LENGTH: "
-                            + driver.getPageSource().length()
-            );
-
-            pageLoadMs =
-                    System.currentTimeMillis() - stepStart;
+            pageLoadMs = System.currentTimeMillis() - stepStart;
 
 
-            // ==================================================
-            // 3. SAYFANIN OTURMASINI BEKLE
-            // ==================================================
+            // =====================================================
+            // 3. SAYFANIN YÜKLENMESİNİ BEKLE
+            // =====================================================
 
             Thread.sleep(3000);
 
 
-            // ==================================================
+            // =====================================================
             // 4. ÜRÜN ADINI BUL
-            // ==================================================
+            // =====================================================
 
             stepStart = System.currentTimeMillis();
 
@@ -193,9 +160,7 @@ public class TrendyolScraper implements ECommerceScraper {
                 try {
 
                     WebElement titleElement =
-                            driver.findElement(
-                                    By.cssSelector(selector)
-                            );
+                            driver.findElement(By.cssSelector(selector));
 
                     String text = titleElement.getText();
 
@@ -204,12 +169,8 @@ public class TrendyolScraper implements ECommerceScraper {
                         productName = text.trim();
 
                         System.out.println(
-                                "Ürün adı bulundu. Selector: "
-                                        + selector
-                        );
-
-                        System.out.println(
-                                "Ürün adı: " + productName
+                                "Ürün adı bulundu [" + selector + "]: "
+                                        + productName
                         );
 
                         break;
@@ -223,103 +184,193 @@ public class TrendyolScraper implements ECommerceScraper {
                     System.currentTimeMillis() - stepStart;
 
 
-            // ==================================================
-            // 5. FİYATI BUL
-            // ==================================================
+            // =====================================================
+            // 5. FİYATLARI BUL
+            // =====================================================
 
             stepStart = System.currentTimeMillis();
 
             WebDriverWait wait =
-                    new WebDriverWait(
-                            driver,
-                            Duration.ofSeconds(10)
+                    new WebDriverWait(driver, Duration.ofSeconds(10));
+
+
+            // =====================================================
+            // GÜNCEL FİYAT
+            // =====================================================
+
+            String[] currentPriceSelectors = {
+
+                    // Trendyol - Sepette fiyat
+                    ".ty-plus-price-discounted-price",
+
+                    // Alternatif Trendyol yapıları
+                    ".prc-dsc",
+
+                    "p.new-price",
+
+                    "div.price-container span.discounted",
+
+                    "[class*='discounted-price']",
+
+                    "[class*='discountedPrice']",
+
+                    "[class*='current-price']",
+
+                    "[class*='currentPrice']"
+            };
+
+            for (String selector : currentPriceSelectors) {
+
+                try {
+
+                    WebElement priceElement = wait.until(
+                            ExpectedConditions.visibilityOfElementLocated(
+                                    By.cssSelector(selector)
+                            )
                     );
 
-            WebElement priceElement = null;
+                    String priceText = priceElement.getText();
 
-            /*
-             * Trendyol'un incelediğimiz gerçek HTML yapısı:
-             *
-             * div.price-wrapper
-             *     div.price.normal-price
-             *         div.price-container
-             *             span.discounted
-             *
-             * Örnek:
-             *
-             * <span class="discounted">
-             *     1.643 TL
-             * </span>
-             */
+                    System.out.println(
+                            "Güncel fiyat adayı [" + selector + "]: "
+                                    + priceText
+                    );
 
-            try {
+                    currentPrice = parsePrice(priceText);
 
-                priceElement = wait.until(
-                        ExpectedConditions.visibilityOfElementLocated(
-                                By.cssSelector(
-                                        "div.price-container span.discounted"
-                                )
-                        )
-                );
+                    if (currentPrice != null) {
 
-                String priceText =
-                        priceElement.getText();
+                        System.out.println(
+                                "Güncel fiyat bulundu: "
+                                        + currentPrice
+                                        + " TL"
+                        );
+
+                        break;
+                    }
+
+                } catch (Exception ignored) {
+                }
+            }
+
+            if (currentPrice == null) {
 
                 System.out.println(
-                        "Fiyat elementi bulundu."
-                );
-
-                System.out.println(
-                        "Ham fiyat: " + priceText
-                );
-
-                currentPrice =
-                        parsePrice(priceText);
-
-            } catch (Exception e) {
-
-                System.out.println(
-                        "Ana fiyat selector'ı ile fiyat bulunamadı."
-                );
-
-                System.out.println(
-                        "Hata: " + e.getMessage()
+                        "Güncel fiyat hiçbir selector ile bulunamadı."
                 );
             }
 
 
-            // ==================================================
-            // 6. İKİNCİ FİYAT SELECTOR'I
-            // ==================================================
+            // =====================================================
+            // ORİJİNAL FİYAT
+            // =====================================================
 
-            if (currentPrice == null) {
+            String[] originalPriceSelectors = {
+
+                    // Trendyol - Sepette indirim öncesi fiyat
+                    ".ty-plus-price-original-price",
+
+                    // Alternatif Trendyol yapıları
+                    ".prc-slg",
+
+                    "p.old-price",
+
+                    "[class*='original-price']",
+
+                    "[class*='originalPrice']",
+
+                    "[class*='old-price']"
+            };
+
+            for (String selector : originalPriceSelectors) {
 
                 try {
 
-                    priceElement = driver.findElement(
-                            By.cssSelector("span.discounted")
-                    );
+                    WebElement priceElement =
+                            driver.findElement(
+                                    By.cssSelector(selector)
+                            );
 
                     String priceText =
                             priceElement.getText();
 
                     System.out.println(
-                            "Alternatif fiyat selector'ı bulundu."
+                            "Orijinal fiyat adayı ["
+                                    + selector
+                                    + "]: "
+                                    + priceText
                     );
 
-                    System.out.println(
-                            "Ham fiyat: " + priceText
-                    );
-
-                    currentPrice =
+                    originalPrice =
                             parsePrice(priceText);
 
-                } catch (Exception e) {
+                    if (originalPrice != null) {
+
+                        System.out.println(
+                                "Orijinal fiyat bulundu: "
+                                        + originalPrice
+                                        + " TL"
+                        );
+
+                        break;
+                    }
+
+                } catch (Exception ignored) {
+                }
+            }
+
+            if (originalPrice == null) {
+
+                System.out.println(
+                        "Orijinal fiyat bulunamadı."
+                );
+            }
+
+
+            // =====================================================
+            // 6. İNDİRİM HESAPLAMA
+            // =====================================================
+
+            if (currentPrice != null && originalPrice != null) {
+
+                if (originalPrice.compareTo(currentPrice) > 0) {
+
+                    BigDecimal diff =
+                            originalPrice.subtract(currentPrice);
+
+                    BigDecimal percentage =
+                            diff.divide(
+                                            originalPrice,
+                                            4,
+                                            RoundingMode.HALF_UP
+                                    )
+                                    .multiply(new BigDecimal("100"))
+                                    .setScale(2, RoundingMode.HALF_UP);
+
+                    discountInfo =
+                            "%"
+                                    + percentage
+                                    .stripTrailingZeros()
+                                    .toPlainString()
+                                    + " İndirim ("
+                                    + diff
+                                    .stripTrailingZeros()
+                                    .toPlainString()
+                                    + " TL Kazanç)";
 
                     System.out.println(
-                            "Alternatif fiyat selector'ı da başarısız."
+                            "İndirim bilgisi: "
+                                    + discountInfo
                     );
+
+                } else {
+
+                    originalPrice = currentPrice;
                 }
+
+            } else if (currentPrice != null) {
+
+                originalPrice = currentPrice;
             }
 
 
@@ -327,41 +378,30 @@ public class TrendyolScraper implements ECommerceScraper {
                     System.currentTimeMillis() - stepStart;
 
 
-            // ==================================================
-            // 7. SONUÇLARI YAZDIR
-            // ==================================================
-
-            System.out.println(
-                    "======================================"
-            );
-
-            System.out.println(
-                    "Trendyol ürün adı: " + productName
-            );
-
-            System.out.println(
-                    "Trendyol bulunan fiyat: " + currentPrice
-            );
-
-            System.out.println(
-                    "======================================"
-            );
-
-
-            // ==================================================
-            // 8. PRODUCT PRICE INFO
-            // ==================================================
+            // =====================================================
+            // 7. SONUÇ
+            // =====================================================
 
             return new ProductPriceInfo(
+
                     productName,
+
                     currentPrice,
-                    null,
-                    null,
+
+                    originalPrice,
+
+                    discountInfo,
+
                     "Trendyol",
+
                     productUrl,
+
                     driverInitMs,
+
                     pageLoadMs,
+
                     titleFindMs,
+
                     priceFindMs
             );
 
@@ -371,12 +411,17 @@ public class TrendyolScraper implements ECommerceScraper {
             Thread.currentThread().interrupt();
 
             return new ProductPriceInfo(
-                    "Trendyol işlemi kesintiye uğradı",
+
+                    "İşlem kesintiye uğradı",
+
                     null,
                     null,
                     null,
+
                     "Trendyol",
+
                     productUrl,
+
                     driverInitMs,
                     pageLoadMs,
                     titleFindMs,
@@ -386,12 +431,17 @@ public class TrendyolScraper implements ECommerceScraper {
         } catch (Exception e) {
 
             return new ProductPriceInfo(
+
                     "Hata: " + e.getMessage(),
+
                     null,
                     null,
                     null,
+
                     "Trendyol",
+
                     productUrl,
+
                     driverInitMs,
                     pageLoadMs,
                     titleFindMs,
@@ -407,9 +457,54 @@ public class TrendyolScraper implements ECommerceScraper {
     }
 
 
-    // ==================================================
-    // FİYATI BIGDECIMAL'A ÇEVİR
-    // ==================================================
+    // =========================================================
+    // CHROME OPTIONS
+    // =========================================================
+
+    private ChromeOptions createChromeOptions() {
+
+        ChromeOptions options = new ChromeOptions();
+
+        options.addArguments("--headless=new");
+
+        options.addArguments("--disable-gpu");
+
+        options.addArguments("--no-sandbox");
+
+        options.addArguments("--disable-dev-shm-usage");
+
+        options.addArguments(
+                "--disable-blink-features=AutomationControlled"
+        );
+
+        options.setExperimentalOption(
+                "excludeSwitches",
+                new String[]{"enable-automation"}
+        );
+
+        options.addArguments(
+                "user-agent=Mozilla/5.0 " +
+                        "(Windows NT 10.0; Win64; x64) " +
+                        "AppleWebKit/537.36 " +
+                        "(KHTML, like Gecko) " +
+                        "Chrome/120.0.0.0 Safari/537.36"
+        );
+
+        options.addArguments(
+                "--window-size=1920,1080"
+        );
+
+        options.setPageLoadStrategy(
+                PageLoadStrategy.EAGER
+        );
+
+        return options;
+    }
+
+
+    // =========================================================
+    // PRICE PARSER
+    // =========================================================
 
     private BigDecimal parsePrice(String priceText) {
 
@@ -419,26 +514,53 @@ public class TrendyolScraper implements ECommerceScraper {
 
         try {
 
-
             String clean =
-                    priceText.replaceAll("[^0-9.,]", "");
+                    priceText.replaceAll(
+                            "[^0-9.,]",
+                            ""
+                    );
 
             if (clean.isBlank()) {
                 return null;
             }
 
-            if (clean.contains(".") && clean.contains(",")) {
+
+            // Örnek:
+            // 1.299,90 -> 1299.90
+
+            if (clean.contains(".")
+                    && clean.contains(",")) {
 
                 clean = clean
                         .replace(".", "")
                         .replace(",", ".");
 
-            } else if (clean.contains(",")) {
+            }
+
+            // Örnek:
+            // 408,40 -> 408.40
+
+            else if (clean.contains(",")) {
 
                 clean = clean.replace(",", ".");
             }
 
-            return new BigDecimal(clean);
+
+            BigDecimal parsed =
+                    new BigDecimal(clean);
+
+
+            // 20 TL altındaki değerleri fiyat olarak kabul etme
+
+            if (parsed.compareTo(
+                    new BigDecimal("20")
+            ) < 0) {
+
+                return null;
+            }
+
+            return parsed;
+
 
         } catch (Exception e) {
 
