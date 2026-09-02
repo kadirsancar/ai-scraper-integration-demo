@@ -8,6 +8,8 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -16,7 +18,7 @@ import java.time.Duration;
 import java.util.List;
 
 @Component
-public class HepsiBuradaScraper implements ECommerceScraper {
+public class HepsiBuradaScraper implements  ECommerceScraper {
 
     @Override
     public boolean supports(String url) {
@@ -29,6 +31,10 @@ public class HepsiBuradaScraper implements ECommerceScraper {
         return fetchProductDetailsInternal(productUrl);
     }
 
+    // =========================================================
+    // SEARCH
+    // =========================================================
+
     @Override
     public ProductPriceInfo searchAndGetProduct(String productName) {
 
@@ -40,26 +46,157 @@ public class HepsiBuradaScraper implements ECommerceScraper {
 
         try {
 
+            System.out.println("======================================");
+            System.out.println("Hepsiburada ürün araması: " + productName);
+            System.out.println("Hepsiburada arama URL: " + searchUrl);
+            System.out.println("======================================");
+
             ChromeOptions options = createChromeOptions();
 
             driver = new ChromeDriver(options);
 
             driver.manage()
                     .timeouts()
-                    .pageLoadTimeout(
-                            Duration.ofSeconds(40)
-                    );
+                    .pageLoadTimeout(Duration.ofSeconds(30));
 
             driver.get(searchUrl);
 
             Thread.sleep(5000);
 
-            WebElement firstProduct =
-                    driver.findElement(
-                            By.cssSelector(
-                                    "li[id^='product-item'] a"
-                            )
+            System.out.println(
+                    "Hepsiburada sayfa title: "
+                            + driver.getTitle()
+            );
+
+            System.out.println(
+                    "Hepsiburada mevcut URL: "
+                            + driver.getCurrentUrl()
+            );
+
+            // =====================================================
+            // SEARCH SECURITY CHECK
+            // =====================================================
+
+            if (isSecurityPage(driver)) {
+
+                System.out.println(
+                        "❌ Hepsiburada arama sayfasında güvenlik kontrolü!"
+                );
+
+                return new ProductPriceInfo(
+                        "Hepsiburada | Güvenlik",
+                        null,
+                        null,
+                        null,
+                        "Hepsiburada",
+                        searchUrl,
+                        0,
+                        0,
+                        0,
+                        0
+                );
+            }
+
+            // =====================================================
+            // ÜRÜN LİNKLERİNİ BUL
+            // =====================================================
+
+            String[] selectors = {
+
+                    "a[href*='-p-']",
+
+                    "a[class*='productCardLink']",
+
+                    "a[href*='/']"
+
+            };
+
+            WebElement firstProduct = null;
+
+            for (String selector : selectors) {
+
+                try {
+
+                    List<WebElement> products =
+                            driver.findElements(
+                                    By.cssSelector(selector)
+                            );
+
+                    System.out.println(
+                            "Selector: "
+                                    + selector
+                                    + " | element sayısı: "
+                                    + products.size()
                     );
+
+                    for (WebElement product : products) {
+
+                        String href =
+                                product.getAttribute("href");
+
+                        if (href == null ||
+                                href.isBlank()) {
+                            continue;
+                        }
+
+                        if (href.contains("-p-")) {
+
+                            firstProduct = product;
+
+                            System.out.println(
+                                    "✅ Ürün linki bulundu:"
+                            );
+
+                            System.out.println(
+                                    "URL: " + href
+                            );
+
+                            break;
+                        }
+                    }
+
+                    if (firstProduct != null) {
+                        break;
+                    }
+
+                } catch (Exception e) {
+
+                    System.out.println(
+                            "Selector hatası: "
+                                    + selector
+                                    + " -> "
+                                    + e.getMessage()
+                    );
+                }
+            }
+
+            // =====================================================
+            // ÜRÜN BULUNAMADI
+            // =====================================================
+
+            if (firstProduct == null) {
+
+                System.out.println(
+                        "❌ Hepsiburada ürün linki bulunamadı."
+                );
+
+                return new ProductPriceInfo(
+                        "Arama sonucu bulunamadı",
+                        null,
+                        null,
+                        null,
+                        "Hepsiburada",
+                        searchUrl,
+                        0,
+                        0,
+                        0,
+                        0
+                );
+            }
+
+            // =====================================================
+            // ÜRÜN URL
+            // =====================================================
 
             String productUrl =
                     firstProduct.getAttribute("href");
@@ -72,9 +209,71 @@ public class HepsiBuradaScraper implements ECommerceScraper {
                                 + productUrl;
             }
 
+            /*
+             * Satıcı parametresini kaldır.
+             *
+             * Örnek:
+             *
+             * ?magaza=Nethouse
+             *
+             */
+
+            if (productUrl != null &&
+                    productUrl.contains("?")) {
+
+                productUrl =
+                        productUrl.substring(
+                                0,
+                                productUrl.indexOf("?")
+                        );
+            }
+
+            // =====================================================
+            // ÜRÜN ADI
+            // =====================================================
+
+            String searchProductName =
+                    firstProduct.getAttribute("title");
+
+            if (searchProductName == null ||
+                    searchProductName.isBlank()) {
+
+                searchProductName =
+                        firstProduct.getText().trim();
+            }
+
+            System.out.println(
+                    "======================================"
+            );
+
+            System.out.println(
+                    "Hepsiburada ilk ürün bulundu:"
+            );
+
+            System.out.println(
+                    "Ürün: " + searchProductName
+            );
+
+            System.out.println(
+                    "Temiz URL: " + productUrl
+            );
+
+            System.out.println(
+                    "======================================"
+            );
+
+            // =====================================================
+            // ÜRÜN DETAYI
+            // =====================================================
+
             return getProductDetails(productUrl);
 
         } catch (Exception e) {
+
+            System.out.println(
+                    "❌ Hepsiburada arama hatası: "
+                            + e.getMessage()
+            );
 
             return new ProductPriceInfo(
                     "Arama Hatası: " + e.getMessage(),
@@ -97,12 +296,9 @@ public class HepsiBuradaScraper implements ECommerceScraper {
         }
     }
 
-
-    /*
-     * ============================================================
-     * ANA SCRAPER
-     * ============================================================
-     */
+    // =========================================================
+    // PRODUCT DETAIL
+    // =========================================================
 
     private ProductPriceInfo fetchProductDetailsInternal(
             String productUrl) {
@@ -119,11 +315,9 @@ public class HepsiBuradaScraper implements ECommerceScraper {
 
         try {
 
-            /*
-             * ====================================================
-             * CHROME
-             * ====================================================
-             */
+            // =====================================================
+            // DRIVER
+            // =====================================================
 
             long start =
                     System.currentTimeMillis();
@@ -132,57 +326,65 @@ public class HepsiBuradaScraper implements ECommerceScraper {
                     createChromeOptions();
 
             driver =
-                    new ChromeDriver(options);
+                    new org.openqa.selenium.chrome.ChromeDriver(options);
 
             driver.manage()
                     .timeouts()
                     .pageLoadTimeout(
-                            Duration.ofSeconds(40)
+                            Duration.ofSeconds(30)
                     );
 
             driverInitMs =
                     System.currentTimeMillis() - start;
 
-
-            /*
-             * ====================================================
-             * SAYFAYI AÇ
-             * ====================================================
-             */
+            // =====================================================
+            // PAGE LOAD
+            // =====================================================
 
             start =
                     System.currentTimeMillis();
 
             try {
 
+                System.out.println(
+                        "Hepsiburada detay sayfası açılıyor..."
+                );
+
+                System.out.println(
+                        "URL: " + productUrl
+                );
+
                 driver.get(productUrl);
 
-            } catch (Exception ignored) {
+            } catch (Exception e) {
+
+                System.out.println(
+                        "Detay sayfası yükleme uyarısı: "
+                                + e.getMessage()
+                );
             }
 
             /*
-             * JS tamamen çalışsın.
+             * JavaScript'in çalışması ve fiyat alanlarının
+             * oluşması için kısa bekleme.
              */
 
-            Thread.sleep(6000);
+            Thread.sleep(5000);
 
             pageLoadMs =
                     System.currentTimeMillis() - start;
 
-
-            /*
-             * ====================================================
-             * SAYFA KONTROLÜ
-             * ====================================================
-             */
+            // =====================================================
+            // PAGE INFO
+            // =====================================================
 
             System.out.println(
                     "======================================"
             );
 
             System.out.println(
-                    "Hepsiburada URL: "
-                            + productUrl
+                    "Hepsiburada detay URL: "
+                            + driver.getCurrentUrl()
             );
 
             System.out.println(
@@ -190,15 +392,28 @@ public class HepsiBuradaScraper implements ECommerceScraper {
                             + driver.getTitle()
             );
 
+            System.out.println(
+                    "======================================"
+            );
 
-            /*
-             * Güvenlik sayfası mı?
-             */
+            // =====================================================
+            // SECURITY CHECK
+            // =====================================================
 
             if (isSecurityPage(driver)) {
 
                 System.out.println(
-                        "HEPSIBURADA GÜVENLİK SAYFASI ALGILANDI!"
+                        "❌ HEPSIBURADA GÜVENLİK SAYFASI!"
+                );
+
+                System.out.println(
+                        "Security page URL: "
+                                + driver.getCurrentUrl()
+                );
+
+                System.out.println(
+                        "Security page title: "
+                                + driver.getTitle()
                 );
 
                 return new ProductPriceInfo(
@@ -215,12 +430,36 @@ public class HepsiBuradaScraper implements ECommerceScraper {
                 );
             }
 
+            // =====================================================
+            // WAIT
+            // =====================================================
 
-            /*
-             * ====================================================
-             * ÜRÜN ADI
-             * ====================================================
-             */
+            WebDriverWait wait =
+                    new WebDriverWait(
+                            driver,
+                            Duration.ofSeconds(10)
+                    );
+
+            try {
+
+                wait.until(
+                        ExpectedConditions.presenceOfElementLocated(
+                                By.cssSelector(
+                                        "h1, [data-test-id='title'], [data-test-id^='final-price'], [data-test-id='default-price']"
+                                )
+                        )
+                );
+
+            } catch (Exception e) {
+
+                System.out.println(
+                        "Fiyat/title elementi bekleme süresi doldu."
+                );
+            }
+
+            // =====================================================
+            // PRODUCT NAME
+            // =====================================================
 
             start =
                     System.currentTimeMillis();
@@ -231,12 +470,9 @@ public class HepsiBuradaScraper implements ECommerceScraper {
             titleFindMs =
                     System.currentTimeMillis() - start;
 
-
-            /*
-             * ====================================================
-             * FİYATLAR
-             * ====================================================
-             */
+            // =====================================================
+            // PRICES
+            // =====================================================
 
             start =
                     System.currentTimeMillis();
@@ -247,12 +483,9 @@ public class HepsiBuradaScraper implements ECommerceScraper {
             BigDecimal previousPrice =
                     findPreviousPrice(driver);
 
-
-            /*
-             * ====================================================
-             * İNDİRİM
-             * ====================================================
-             */
+            // =====================================================
+            // DISCOUNT
+            // =====================================================
 
             String discountPercentage =
                     calculateDiscount(
@@ -260,16 +493,12 @@ public class HepsiBuradaScraper implements ECommerceScraper {
                             previousPrice
                     );
 
-
             priceFindMs =
                     System.currentTimeMillis() - start;
 
-
-            /*
-             * ====================================================
-             * DEBUG
-             * ====================================================
-             */
+            // =====================================================
+            // DEBUG
+            // =====================================================
 
             System.out.println(
                     "======================================"
@@ -299,7 +528,6 @@ public class HepsiBuradaScraper implements ECommerceScraper {
                     "======================================"
             );
 
-
             return new ProductPriceInfo(
                     productName,
                     currentPrice,
@@ -314,6 +542,11 @@ public class HepsiBuradaScraper implements ECommerceScraper {
             );
 
         } catch (Exception e) {
+
+            System.out.println(
+                    "❌ Hepsiburada scraper hatası: "
+                            + e.getMessage()
+            );
 
             e.printStackTrace();
 
@@ -338,12 +571,9 @@ public class HepsiBuradaScraper implements ECommerceScraper {
         }
     }
 
-
-    /*
-     * ============================================================
-     * CHROME AYARLARI
-     * ============================================================
-     */
+    // =========================================================
+    // CHROME OPTIONS
+    // =========================================================
 
     private ChromeOptions createChromeOptions() {
 
@@ -351,10 +581,7 @@ public class HepsiBuradaScraper implements ECommerceScraper {
                 new ChromeOptions();
 
         /*
-         * Headless yerine normal Chrome.
-         *
-         * Hepsiburada güvenlik sistemi headless
-         * tarayıcıları daha kolay engelleyebiliyor.
+         * HEADLESS KAPALI.
          */
 
         options.addArguments(
@@ -382,7 +609,11 @@ public class HepsiBuradaScraper implements ECommerceScraper {
         );
 
         options.addArguments(
-                "--start-maximized"
+                "--disable-extensions"
+        );
+
+        options.addArguments(
+                "--disable-notifications"
         );
 
         options.setPageLoadStrategy(
@@ -392,12 +623,9 @@ public class HepsiBuradaScraper implements ECommerceScraper {
         return options;
     }
 
-
-    /*
-     * ============================================================
-     * GÜVENLİK SAYFASI KONTROLÜ
-     * ============================================================
-     */
+    // =========================================================
+    // SECURITY PAGE
+    // =========================================================
 
     private boolean isSecurityPage(
             WebDriver driver) {
@@ -407,50 +635,133 @@ public class HepsiBuradaScraper implements ECommerceScraper {
             String title =
                     driver.getTitle();
 
-            if (title != null &&
-                    title.toLowerCase()
-                            .contains("güvenlik")) {
+            String currentUrl =
+                    driver.getCurrentUrl();
+
+            System.out.println(
+                    "Security check title: "
+                            + title
+            );
+
+            System.out.println(
+                    "Security check URL: "
+                            + currentUrl
+            );
+
+            // =====================================================
+            // URL KONTROLÜ
+            // =====================================================
+
+            String lowerUrl =
+                    currentUrl != null
+                            ? currentUrl.toLowerCase()
+                            : "";
+
+            if (lowerUrl.contains("captcha") ||
+                    lowerUrl.contains("challenge") ||
+                    lowerUrl.contains("security-check") ||
+                    lowerUrl.contains("security_check")) {
 
                 return true;
             }
+
+            // =====================================================
+            // TITLE KONTROLÜ
+            // =====================================================
+
+            String lowerTitle =
+                    title != null
+                            ? title.toLowerCase()
+                            : "";
+
+            if (lowerTitle.contains("security check") ||
+                    lowerTitle.contains("güvenlik kontrolü") ||
+                    lowerTitle.contains("captcha") ||
+                    lowerTitle.contains("doğrulama gerekli")) {
+
+                return true;
+            }
+
+            // =====================================================
+            // BODY KONTROLÜ
+            // =====================================================
 
             String body =
                     driver.findElement(
                             By.tagName("body")
                     ).getText();
 
-            if (body != null) {
+            if (body == null ||
+                    body.isBlank()) {
 
-                String lower =
-                        body.toLowerCase();
-
-                if (lower.contains("güvenlik kontrolü") ||
-                        lower.contains("güvenlik") &&
-                                lower.contains("hepsiburada")) {
-
-                    return true;
-                }
+                return false;
             }
 
-        } catch (Exception ignored) {
-        }
+            String lowerBody =
+                    body.toLowerCase();
 
-        return false;
+            /*
+             * ÖNEMLİ:
+             *
+             * Artık sadece "güvenlik" ve "hepsiburada"
+             * kelimelerinin aynı anda bulunmasına
+             * bakmıyoruz.
+             *
+             * Çünkü normal ürün sayfasında da bu
+             * kelimeler bulunabilir.
+             */
+
+            if (lowerBody.contains(
+                    "güvenlik kontrolünü tamamlayın")) {
+
+                return true;
+            }
+
+            if (lowerBody.contains(
+                    "güvenlik doğrulaması")) {
+
+                return true;
+            }
+
+            if (lowerBody.contains(
+                    "robot olmadığınızı doğrulayın")) {
+
+                return true;
+            }
+
+            if (lowerBody.contains(
+                    "insan olduğunuzu doğrulayın")) {
+
+                return true;
+            }
+
+            if (lowerBody.contains(
+                    "captcha")) {
+
+                return true;
+            }
+
+            return false;
+
+        } catch (Exception e) {
+
+            System.out.println(
+                    "Security check kontrolünde hata: "
+                            + e.getMessage()
+            );
+
+            return false;
+        }
     }
 
-
-    /*
-     * ============================================================
-     * ÜRÜN ADI
-     * ============================================================
-     */
+    // =========================================================
+    // PRODUCT NAME
+    // =========================================================
 
     private String findProductName(
             WebDriver driver) {
 
-        /*
-         * 1
-         */
+        // 1 - product-name
 
         try {
 
@@ -459,8 +770,7 @@ public class HepsiBuradaScraper implements ECommerceScraper {
                             By.id("product-name")
                     );
 
-            for (WebElement element :
-                    elements) {
+            for (WebElement element : elements) {
 
                 String text =
                         element.getText().trim();
@@ -473,10 +783,7 @@ public class HepsiBuradaScraper implements ECommerceScraper {
         } catch (Exception ignored) {
         }
 
-
-        /*
-         * 2
-         */
+        // 2 - data-test-id title
 
         try {
 
@@ -487,8 +794,7 @@ public class HepsiBuradaScraper implements ECommerceScraper {
                             )
                     );
 
-            for (WebElement element :
-                    elements) {
+            for (WebElement element : elements) {
 
                 String text =
                         element.getText().trim();
@@ -501,10 +807,29 @@ public class HepsiBuradaScraper implements ECommerceScraper {
         } catch (Exception ignored) {
         }
 
+        // 3 - H1
 
-        /*
-         * 3
-         */
+        try {
+
+            List<WebElement> elements =
+                    driver.findElements(
+                            By.cssSelector("h1")
+                    );
+
+            for (WebElement element : elements) {
+
+                String text =
+                        element.getText().trim();
+
+                if (!text.isBlank()) {
+                    return text;
+                }
+            }
+
+        } catch (Exception ignored) {
+        }
+
+        // 4 - Browser title
 
         try {
 
@@ -519,160 +844,178 @@ public class HepsiBuradaScraper implements ECommerceScraper {
                                 " | Hepsiburada",
                                 ""
                         )
+                        .replace(
+                                " Fiyatı",
+                                ""
+                        )
                         .trim();
             }
 
         } catch (Exception ignored) {
         }
 
-
         return "Bilinmeyen Hepsiburada Ürünü";
     }
 
-
-    /*
-     * ============================================================
-     * GÜNCEL FİYAT
-     * ============================================================
-     *
-     * HTML:
-     *
-     * data-test-id="default-price"
-     *
-     * 209,90 TL
-     *
-     * ============================================================
-     */
+    // =========================================================
+    // CURRENT PRICE
+    // =========================================================
 
     private BigDecimal findCurrentPrice(
             WebDriver driver) {
 
-        try {
+        String[] selectors = {
 
-            List<WebElement> elements =
-                    driver.findElements(
-                            By.cssSelector(
-                                    "[data-test-id='default-price'] span"
-                            )
-                    );
+                "[data-test-id^='final-price']",
 
-            System.out.println(
-                    "Güncel fiyat element sayısı: "
-                            + elements.size()
-            );
+                "[data-test-id='default-price']",
 
+                "[class*='finalPrice']",
 
-            for (WebElement element :
-                    elements) {
+                "[class*='final-price']",
 
-                String text =
-                        element.getText().trim();
+                "[class*='currentPrice']",
+
+                "[class*='current-price']"
+
+        };
+
+        for (String selector : selectors) {
+
+            try {
+
+                List<WebElement> elements =
+                        driver.findElements(
+                                By.cssSelector(selector)
+                        );
 
                 System.out.println(
-                        "Güncel fiyat adayı: "
-                                + text
+                        "Güncel fiyat selector: "
+                                + selector
+                                + " | element: "
+                                + elements.size()
                 );
 
-                BigDecimal price =
-                        parsePrice(text);
+                for (WebElement element : elements) {
 
-                if (isValidPrice(price)) {
+                    String text =
+                            element.getText().trim();
 
                     System.out.println(
-                            "Güncel fiyat bulundu: "
-                                    + price
+                            "Güncel fiyat adayı: "
+                                    + text
                     );
 
-                    return price;
+                    BigDecimal price =
+                            parsePrice(text);
+
+                    if (isValidPrice(price)) {
+
+                        System.out.println(
+                                "✅ Güncel fiyat bulundu: "
+                                        + price
+                        );
+
+                        return price;
+                    }
                 }
+
+            } catch (Exception e) {
+
+                System.out.println(
+                        "Güncel fiyat selector hatası: "
+                                + selector
+                                + " -> "
+                                + e.getMessage()
+                );
             }
-
-        } catch (Exception e) {
-
-            System.out.println(
-                    "Güncel fiyat hatası: "
-                            + e.getMessage()
-            );
         }
 
         return null;
     }
 
-
-    /*
-     * ============================================================
-     * ÖNCEKİ FİYAT
-     * ============================================================
-     *
-     * HTML:
-     *
-     * data-test-id="prev-price"
-     *
-     * 249,89 TL
-     *
-     * ============================================================
-     */
+    // =========================================================
+    // PREVIOUS PRICE
+    // =========================================================
 
     private BigDecimal findPreviousPrice(
             WebDriver driver) {
 
-        try {
+        String[] selectors = {
 
-            List<WebElement> elements =
-                    driver.findElements(
-                            By.cssSelector(
-                                    "[data-test-id='prev-price'] span"
-                            )
-                    );
+                "[data-test-id='prev-price'] span",
 
-            System.out.println(
-                    "Önceki fiyat element sayısı: "
-                            + elements.size()
-            );
+                "[data-test-id='prev-price']",
 
+                "[class*='originalPrice']",
 
-            for (WebElement element :
-                    elements) {
+                "[class*='original-price']",
 
-                String text =
-                        element.getText().trim();
+                "[class*='previousPrice']",
+
+                "[class*='previous-price']",
+
+                "del"
+
+        };
+
+        for (String selector : selectors) {
+
+            try {
+
+                List<WebElement> elements =
+                        driver.findElements(
+                                By.cssSelector(selector)
+                        );
 
                 System.out.println(
-                        "Önceki fiyat adayı: "
-                                + text
+                        "Önceki fiyat selector: "
+                                + selector
+                                + " | element: "
+                                + elements.size()
                 );
 
-                BigDecimal price =
-                        parsePrice(text);
+                for (WebElement element : elements) {
 
-                if (isValidPrice(price)) {
+                    String text =
+                            element.getText().trim();
 
                     System.out.println(
-                            "Önceki fiyat bulundu: "
-                                    + price
+                            "Önceki fiyat adayı: "
+                                    + text
                     );
 
-                    return price;
+                    BigDecimal price =
+                            parsePrice(text);
+
+                    if (isValidPrice(price)) {
+
+                        System.out.println(
+                                "✅ Önceki fiyat bulundu: "
+                                        + price
+                        );
+
+                        return price;
+                    }
                 }
+
+            } catch (Exception e) {
+
+                System.out.println(
+                        "Önceki fiyat selector hatası: "
+                                + selector
+                                + " -> "
+                                + e.getMessage()
+                );
             }
-
-        } catch (Exception e) {
-
-            System.out.println(
-                    "Önceki fiyat hatası: "
-                            + e.getMessage()
-            );
         }
 
         return null;
     }
 
-
-    /*
-     * ============================================================
-     * İNDİRİM HESAPLA
-     * ============================================================
-     */
+    // =========================================================
+    // DISCOUNT
+    // =========================================================
 
     private String calculateDiscount(
             BigDecimal currentPrice,
@@ -698,7 +1041,6 @@ public class HepsiBuradaScraper implements ECommerceScraper {
             return "0.00";
         }
 
-
         BigDecimal discount =
                 previousPrice
                         .subtract(currentPrice)
@@ -718,12 +1060,9 @@ public class HepsiBuradaScraper implements ECommerceScraper {
         return discount.toString();
     }
 
-
-    /*
-     * ============================================================
-     * FİYAT PARSE
-     * ============================================================
-     */
+    // =========================================================
+    // PRICE PARSER
+    // =========================================================
 
     private BigDecimal parsePrice(
             String priceText) {
@@ -748,13 +1087,10 @@ public class HepsiBuradaScraper implements ECommerceScraper {
                 return null;
             }
 
-
             /*
-             * 1.249,90
-             *
+             * 1.288,81
              * ->
-             *
-             * 1249.90
+             * 1288.81
              */
 
             if (clean.contains(".") &&
@@ -762,16 +1098,17 @@ public class HepsiBuradaScraper implements ECommerceScraper {
 
                 clean =
                         clean
-                                .replace(
-                                        ".",
-                                        ""
-                                )
-                                .replace(
-                                        ",",
-                                        "."
-                                );
+                                .replace(".", "")
+                                .replace(",", ".");
+            }
 
-            } else if (clean.contains(",")) {
+            /*
+             * 1288,81
+             * ->
+             * 1288.81
+             */
+
+            else if (clean.contains(",")) {
 
                 clean =
                         clean.replace(
@@ -780,21 +1117,22 @@ public class HepsiBuradaScraper implements ECommerceScraper {
                         );
             }
 
-
             return new BigDecimal(clean);
 
         } catch (Exception e) {
+
+            System.out.println(
+                    "Hepsiburada fiyat parse edilemedi: "
+                            + priceText
+            );
 
             return null;
         }
     }
 
-
-    /*
-     * ============================================================
-     * VALIDATION
-     * ============================================================
-     */
+    // =========================================================
+    // VALIDATION
+    // =========================================================
 
     private boolean isValidPrice(
             BigDecimal price) {

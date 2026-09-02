@@ -13,7 +13,10 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.List;
 
 @Component
 public class PttAvmScraper implements ECommerceScraper {
@@ -37,33 +40,120 @@ public class PttAvmScraper implements ECommerceScraper {
 
         WebDriver driver = null;
 
+        long driverInitMs = 0;
+        long pageLoadMs = 0;
+        long titleFindMs = 0;
+        long priceFindMs = 0;
+
         try {
+
+            System.out.println("======================================");
+            System.out.println("PTTAVM ürün araması: " + productName);
+            System.out.println("PTTAVM arama URL: " + searchUrl);
+            System.out.println("======================================");
+
+            // =====================================================
+            // DRIVER
+            // =====================================================
+
+            long stepStart = System.currentTimeMillis();
 
             ChromeOptions options = createChromeOptions();
 
             driver = new ChromeDriver(options);
 
-            driver.get(searchUrl);
+            driverInitMs =
+                    System.currentTimeMillis() - stepStart;
+
+
+            // =====================================================
+            // PAGE LOAD
+            // =====================================================
+
+            stepStart = System.currentTimeMillis();
+
+            try {
+                driver.get(searchUrl);
+            } catch (Exception ignored) {
+            }
+
+            pageLoadMs =
+                    System.currentTimeMillis() - stepStart;
+
+
+            // =====================================================
+            // WAIT
+            // =====================================================
 
             WebDriverWait wait =
-                    new WebDriverWait(driver, Duration.ofSeconds(10));
+                    new WebDriverWait(
+                            driver,
+                            Duration.ofSeconds(10)
+                    );
 
-            WebElement firstProduct = wait.until(
+            wait.until(
                     ExpectedConditions.presenceOfElementLocated(
                             By.cssSelector(
-                                    "a.product-item, " +
-                                            "div.product-card a, " +
-                                            "a[href*='/urun/'], " +
-                                            "a[href*='/product/'], " +
-                                            "a[href*='-p-']"
+                                    "ul[data-grid='product-list'] li"
                             )
                     )
             );
 
-            String productUrl =
-                    firstProduct.getAttribute("href");
 
-            if (productUrl == null || productUrl.isBlank()) {
+            // =====================================================
+            // BOT CHECK
+            // =====================================================
+
+            if (isBlocked(driver.getPageSource())) {
+
+                System.out.println(
+                        "❌ PTTAVM bot engellemesi tespit edildi."
+                );
+
+                return new ProductPriceInfo(
+                        "PttAVM tarafından erişim engellendi",
+                        null,
+                        null,
+                        null,
+                        "PttAvm",
+                        searchUrl,
+                        driverInitMs,
+                        pageLoadMs,
+                        0,
+                        0
+                );
+            }
+
+
+            // =====================================================
+            // İLK ÜRÜN = 0. ELEMENT
+            // =====================================================
+
+            WebElement firstProduct =
+                    driver.findElement(
+                            By.cssSelector(
+                                    "ul[data-grid='product-list'] li:first-child"
+                            )
+                    );
+
+
+            // =====================================================
+            // PRODUCT URL
+            // =====================================================
+
+            WebElement productLink =
+                    firstProduct.findElement(
+                            By.cssSelector(
+                                    "a.card__dfYph"
+                            )
+                    );
+
+            String productUrl =
+                    productLink.getAttribute("href");
+
+
+            if (productUrl == null ||
+                    productUrl.isBlank()) {
 
                 return new ProductPriceInfo(
                         "PttAVM ürün URL'si bulunamadı",
@@ -72,16 +162,180 @@ public class PttAvmScraper implements ECommerceScraper {
                         null,
                         "PttAvm",
                         searchUrl,
-                        0,
-                        0,
+                        driverInitMs,
+                        pageLoadMs,
                         0,
                         0
                 );
             }
 
-            return getProductDetails(productUrl);
+
+            // =====================================================
+            // PRODUCT TITLE
+            // =====================================================
+
+            stepStart = System.currentTimeMillis();
+
+            String foundProductName;
+
+            try {
+
+                WebElement nameElement =
+                        firstProduct.findElement(
+                                By.cssSelector(
+                                        "h2.name__yWPWa"
+                                )
+                        );
+
+                foundProductName =
+                        nameElement.getText().trim();
+
+            } catch (Exception e) {
+
+                foundProductName =
+                        productName;
+            }
+
+            titleFindMs =
+                    System.currentTimeMillis() - stepStart;
+
+
+            // =====================================================
+            // PRICE
+            // =====================================================
+
+            stepStart = System.currentTimeMillis();
+
+            BigDecimal price = null;
+            BigDecimal oldPrice = null;
+
+
+            // -----------------------------------------------------
+            // GÜNCEL / SEPETE ÖZEL FİYAT
+            // -----------------------------------------------------
+
+            try {
+
+                WebElement specialPriceElement =
+                        firstProduct.findElement(
+                                By.cssSelector(
+                                        ".specialPriceValue__HPhRC"
+                                )
+                        );
+
+                String specialPriceText =
+                        specialPriceElement
+                                .getText()
+                                .trim();
+
+                price =
+                        parsePrice(specialPriceText);
+
+            } catch (Exception e) {
+
+                System.out.println(
+                        "PTTAVM sepete özel fiyat bulunamadı."
+                );
+            }
+
+
+            // -----------------------------------------------------
+            // NORMAL / ESKİ FİYAT
+            // -----------------------------------------------------
+
+            try {
+
+                WebElement regularPriceElement =
+                        firstProduct.findElement(
+                                By.cssSelector(
+                                        ".regularPriceValue__I3siB"
+                                )
+                        );
+
+                String regularPriceText =
+                        regularPriceElement
+                                .getText()
+                                .trim();
+
+                oldPrice =
+                        parsePrice(regularPriceText);
+
+            } catch (Exception e) {
+
+                System.out.println(
+                        "PTTAVM normal fiyat bulunamadı."
+                );
+            }
+
+
+            // =====================================================
+            // DISCOUNT
+            // =====================================================
+
+            String discountInfo =
+                    calculateDiscountInfo(
+                            oldPrice,
+                            price
+                    );
+
+
+            priceFindMs =
+                    System.currentTimeMillis() - stepStart;
+
+
+            // =====================================================
+            // LOG
+            // =====================================================
+
+            System.out.println(
+                    "PTTAVM ilk ürün bulundu:"
+            );
+
+            System.out.println(
+                    "Ürün: " + foundProductName
+            );
+
+            System.out.println(
+                    "URL: " + productUrl
+            );
+
+            System.out.println(
+                    "Güncel fiyat: " + price
+            );
+
+            System.out.println(
+                    "Normal fiyat: " + oldPrice
+            );
+
+            System.out.println(
+                    "İndirim: " + discountInfo
+            );
+
+
+            // =====================================================
+            // RETURN
+            // =====================================================
+
+            return new ProductPriceInfo(
+                    foundProductName,
+                    price,
+                    oldPrice,
+                    discountInfo,
+                    "PttAvm",
+                    productUrl,
+                    driverInitMs,
+                    pageLoadMs,
+                    titleFindMs,
+                    priceFindMs
+            );
+
 
         } catch (Exception e) {
+
+            System.out.println(
+                    "❌ PTTAVM arama hatası: "
+                            + e.getMessage()
+            );
 
             return new ProductPriceInfo(
                     "Arama Hatası: " + e.getMessage(),
@@ -90,10 +344,10 @@ public class PttAvmScraper implements ECommerceScraper {
                     null,
                     "PttAvm",
                     searchUrl,
-                    0,
-                    0,
-                    0,
-                    0
+                    driverInitMs,
+                    pageLoadMs,
+                    titleFindMs,
+                    priceFindMs
             );
 
         } finally {
@@ -103,6 +357,11 @@ public class PttAvmScraper implements ECommerceScraper {
             }
         }
     }
+
+
+    // =========================================================
+    // PRODUCT DETAIL
+    // =========================================================
 
     private ProductPriceInfo fetchProductDetailsInternal(
             String productUrl) {
@@ -114,10 +373,8 @@ public class PttAvmScraper implements ECommerceScraper {
 
         BigDecimal price = null;
 
-        // Sitedeki üstü çizili eski fiyat
         BigDecimal oldPrice = null;
 
-        // Örneğin: %5.90 indirim (619.44 TL Kazanç)
         String discountInfo = null;
 
         long driverInitMs = 0;
@@ -152,7 +409,9 @@ public class PttAvmScraper implements ECommerceScraper {
                     System.currentTimeMillis();
 
             try {
+
                 driver.get(productUrl);
+
             } catch (Exception ignored) {
             }
 
@@ -167,7 +426,7 @@ public class PttAvmScraper implements ECommerceScraper {
             WebDriverWait wait =
                     new WebDriverWait(
                             driver,
-                            Duration.ofSeconds(10)
+                            Duration.ofSeconds(15)
                     );
 
             try {
@@ -196,20 +455,14 @@ public class PttAvmScraper implements ECommerceScraper {
             if (isBlocked(pageSource)) {
 
                 System.out.println(
-                        "PttAVM bot engellemesi tespit edildi."
+                        "❌ PTTAVM bot engellemesi tespit edildi."
                 );
 
-                return new ProductPriceInfo(
-                        "PttAVM tarafından erişim engellendi",
-                        null,
-                        null,
-                        null,
-                        "PttAvm",
+                return createErrorResult(
+                        "PTTAVM tarafından erişim engellendi",
                         productUrl,
                         driverInitMs,
-                        pageLoadMs,
-                        0,
-                        0
+                        pageLoadMs
                 );
             }
 
@@ -251,7 +504,7 @@ public class PttAvmScraper implements ECommerceScraper {
                         productName = text;
 
                         System.out.println(
-                                "PttAVM ürün adı: "
+                                "PTTAVM ürün adı: "
                                         + productName
                         );
 
@@ -275,7 +528,7 @@ public class PttAvmScraper implements ECommerceScraper {
 
 
             // =====================================================
-            // 1. İNDİRİMLİ / GÜNCEL FİYAT
+            // CURRENT / SPECIAL PRICE
             // =====================================================
 
             try {
@@ -293,23 +546,25 @@ public class PttAvmScraper implements ECommerceScraper {
                                 .trim();
 
                 System.out.println(
-                        "PttAVM indirimli fiyat: "
+                        "PTTAVM güncel fiyat: "
                                 + specialPriceText
                 );
 
                 price =
-                        parsePrice(specialPriceText);
+                        parsePrice(
+                                specialPriceText
+                        );
 
             } catch (Exception e) {
 
                 System.out.println(
-                        "PttAVM indirimli fiyat bulunamadı."
+                        "PTTAVM sepete özel fiyat bulunamadı."
                 );
             }
 
 
             // =====================================================
-            // 2. ESKİ / İNDİRİMSİZ FİYAT
+            // REGULAR PRICE
             // =====================================================
 
             try {
@@ -327,23 +582,89 @@ public class PttAvmScraper implements ECommerceScraper {
                                 .trim();
 
                 System.out.println(
-                        "PttAVM eski fiyat: "
+                        "PTTAVM normal fiyat: "
                                 + regularPriceText
                 );
 
                 oldPrice =
-                        parsePrice(regularPriceText);
+                        parsePrice(
+                                regularPriceText
+                        );
 
             } catch (Exception e) {
 
                 System.out.println(
-                        "PttAVM eski fiyat bulunamadı."
+                        "PTTAVM normal fiyat bulunamadı."
                 );
             }
 
 
             // =====================================================
-            // 3. DISCOUNT INFO HESAPLA
+            // FALLBACK
+            // =====================================================
+
+            if (price == null) {
+
+                try {
+
+                    String[] fallbackSelectors = {
+
+                            "[class*='specialPriceValue']",
+
+                            "[class*='salePrice']",
+
+                            "[class*='sale-price']",
+
+                            "[class*='currentPrice']",
+
+                            "[class*='current-price']",
+
+                            "[class*='priceValue']"
+                    };
+
+                    for (String selector :
+                            fallbackSelectors) {
+
+                        try {
+
+                            WebElement element =
+                                    driver.findElement(
+                                            By.cssSelector(
+                                                    selector
+                                            )
+                                    );
+
+                            String text =
+                                    element
+                                            .getText()
+                                            .trim();
+
+                            BigDecimal parsed =
+                                    parsePrice(text);
+
+                            if (parsed != null) {
+
+                                price = parsed;
+
+                                System.out.println(
+                                        "PTTAVM fallback fiyat: "
+                                                + text
+                                );
+
+                                break;
+                            }
+
+                        } catch (Exception ignored) {
+                        }
+                    }
+
+                } catch (Exception ignored) {
+                }
+            }
+
+
+            // =====================================================
+            // DISCOUNT
             // =====================================================
 
             discountInfo =
@@ -358,7 +679,7 @@ public class PttAvmScraper implements ECommerceScraper {
 
 
             // =====================================================
-            // RESULT LOG
+            // RESULT
             // =====================================================
 
             System.out.println(
@@ -366,7 +687,7 @@ public class PttAvmScraper implements ECommerceScraper {
             );
 
             System.out.println(
-                    "PttAVM ÜRÜN"
+                    "PTTAVM ÜRÜN"
             );
 
             System.out.println(
@@ -390,10 +711,6 @@ public class PttAvmScraper implements ECommerceScraper {
             );
 
 
-            // =====================================================
-            // RETURN
-            // =====================================================
-
             return new ProductPriceInfo(
                     productName,
                     price,
@@ -411,7 +728,7 @@ public class PttAvmScraper implements ECommerceScraper {
         } catch (Exception e) {
 
             System.out.println(
-                    "PttAVM scraper hatası: "
+                    "❌ PTTAVM scraper hatası: "
                             + e.getMessage()
             );
 
@@ -445,26 +762,21 @@ public class PttAvmScraper implements ECommerceScraper {
             BigDecimal oldPrice,
             BigDecimal newPrice) {
 
-        // İki fiyat da yoksa
         if (oldPrice == null || newPrice == null) {
             return null;
         }
 
-        // Eski fiyat 0 veya negatifse hesaplama yapma
         if (oldPrice.compareTo(BigDecimal.ZERO) <= 0) {
             return null;
         }
 
-        // Yeni fiyat eski fiyattan büyük/eşitse indirim yok
         if (newPrice.compareTo(oldPrice) >= 0) {
             return null;
         }
 
-        // Kazanç
         BigDecimal saving =
                 oldPrice.subtract(newPrice);
 
-        // İndirim yüzdesi
         BigDecimal discountPercentage =
                 saving
                         .multiply(BigDecimal.valueOf(100))
@@ -485,6 +797,62 @@ public class PttAvmScraper implements ECommerceScraper {
                 " indirim (" +
                 saving +
                 " TL Kazanç)";
+    }
+
+
+    // =========================================================
+    // PRODUCT NAME NORMALIZATION
+    // =========================================================
+
+    private String normalizeProductName(
+            String text) {
+
+        if (text == null) {
+            return "";
+        }
+
+        return text
+                .toLowerCase()
+                .replace("ı", "i")
+                .replace("ğ", "g")
+                .replace("ü", "u")
+                .replace("ş", "s")
+                .replace("ö", "o")
+                .replace("ç", "c")
+                .replaceAll(
+                        "[^a-z0-9]+",
+                        " "
+                )
+                .trim()
+                .replaceAll(
+                        "\\s+",
+                        " "
+                );
+    }
+
+
+    // =========================================================
+    // ERROR RESULT
+    // =========================================================
+
+    private ProductPriceInfo createErrorResult(
+            String message,
+            String url,
+            long driverInitMs,
+            long pageLoadMs) {
+
+        return new ProductPriceInfo(
+                message,
+                null,
+                null,
+                null,
+                "PttAvm",
+                url,
+                driverInitMs,
+                pageLoadMs,
+                0,
+                0
+        );
     }
 
 
@@ -546,7 +914,8 @@ public class PttAvmScraper implements ECommerceScraper {
     // BLOCK CHECK
     // =========================================================
 
-    private boolean isBlocked(String pageSource) {
+    private boolean isBlocked(
+            String pageSource) {
 
         if (pageSource == null) {
             return false;
@@ -580,7 +949,8 @@ public class PttAvmScraper implements ECommerceScraper {
     // PRICE PARSER
     // =========================================================
 
-    private BigDecimal parsePrice(String priceText) {
+    private BigDecimal parsePrice(
+            String priceText) {
 
         try {
 
@@ -598,14 +968,6 @@ public class PttAvmScraper implements ECommerceScraper {
                             .trim();
 
 
-            /*
-             * 9.879,56
-             *
-             * ->
-             *
-             * 9879.56
-             */
-
             if (cleaned.contains(",")) {
 
                 cleaned =
@@ -614,14 +976,6 @@ public class PttAvmScraper implements ECommerceScraper {
                                 .replace(",", ".");
 
             } else {
-
-                /*
-                 * 10.499 TL
-                 *
-                 * ->
-                 *
-                 * 10499
-                 */
 
                 cleaned =
                         cleaned.replace(".", "");
@@ -644,7 +998,7 @@ public class PttAvmScraper implements ECommerceScraper {
         } catch (Exception e) {
 
             System.out.println(
-                    "PttAVM fiyat parse edilemedi: "
+                    "PTTAVM fiyat parse edilemedi: "
                             + priceText
             );
 
