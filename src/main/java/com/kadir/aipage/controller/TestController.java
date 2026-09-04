@@ -1,7 +1,7 @@
-package com.kadir.aipage.controller;
+ package com.kadir.aipage.controller;
 
 import com.kadir.aipage.dto.ProductPriceInfo;
-import com.kadir.aipage.mcp.scraper.HepsiBuradaScraper;
+import com.kadir.aipage.mcp.scraper.TrendyolScraper;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -11,16 +11,17 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/test-search")
 public class TestController {
 
-    private final HepsiBuradaScraper hepsiBuradaScraper;
+    private final TrendyolScraper trendyolScraper;
 
-    public TestController(HepsiBuradaScraper hepsiBuradaScraper) {
-        this.hepsiBuradaScraper = hepsiBuradaScraper;
+    public TestController(TrendyolScraper trendyolScraper) {
+        this.trendyolScraper = trendyolScraper;
     }
 
-    @GetMapping("/price")
-    public ProductPriceInfo testPrice(
+    @GetMapping("/trendyol")
+    public ProductPriceInfo testTrendyol(
             @RequestParam String product) {
 
-        return hepsiBuradaScraper.searchAndGetProduct(product);
+        return trendyolScraper.searchAndGetProduct(product);
     }
 }
+

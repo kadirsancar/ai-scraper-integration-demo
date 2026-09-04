@@ -71,6 +71,12 @@ public class AiChatService {
                     Önceki fiyat varsa belirt.
                     İndirim oranı varsa belirt.
 
+                    Önceki fiyat bilgisi yoksa "Yok TL" veya "0 TL" yazma.
+                    Bunun yerine sadece "-" kullan.
+
+                    İndirim bilgisi yoksa "Yok" veya "%0" yazma.
+                    Bunun yerine sadece "-" kullan.
+
                     Verilen bilgiler dışında fiyat uydurma.
                     """.formatted(scraperResult);
 
@@ -83,12 +89,6 @@ public class AiChatService {
 
         /*
          * 2. Kullanıcı doğal bir cümle yazdıysa
-         *
-         * Örnek:
-         *
-         * "Casio GR-B300EC-1A'nın fiyatı ne kadar?"
-         * "Casio GR-B300EC-1A nerede daha ucuz?"
-         * "Bu saatin fiyatına bakar mısın Casio GR-B300EC-1A"
          */
         System.out.println("🤖 Ürün adı OpenRouter tarafından çıkarılıyor...");
 
@@ -144,25 +144,70 @@ public class AiChatService {
         String comparisonPrompt =
                 """
                 Kullanıcı şu ürünün fiyatını araştırıyor:
-
+        
                 %s
-
+        
                 Aşağıdaki bilgiler e-ticaret sitelerine girilerek
                 canlı olarak alınmıştır:
-
+        
                 %s
-
+        
                 Bu bilgileri analiz ederek kullanıcıya Türkçe cevap ver.
-
-                Kurallar:
-                - En ucuz güncel fiyatı açıkça belirt.
-                - Hangi sitede olduğunu belirt.
-                - Diğer sitelerdeki fiyatları kısaca karşılaştır.
-                - Önceki fiyat varsa belirt.
-                - İndirim oranı varsa belirt.
-                - Bir sitede fiyat bulunamadıysa bunu söyleyebilirsin.
-                - Kesinlikle yeni bir fiyat uydurma.
-                - Sadece yukarıdaki scraper sonuçlarını kullan.
+        
+                ÇOK ÖNEMLİ KURALLAR:
+        
+                1. Fiyat karşılaştırması yapılıyorsa MUTLAKA Markdown tablo oluştur.
+        
+                2. Tablo formatı:
+        
+                | Platform | Ürün | Güncel Fiyat | Önceki Fiyat | İndirim |
+                |---|---|---:|---:|---:|
+                | Amazon | ... | ... TL | ... | ... |
+                | Hepsiburada | ... | ... TL | ... | ... |
+                | Trendyol | ... | ... TL | ... | ... |
+                | PttAVM | ... | ... TL | ... | ... |
+        
+                3. Scraper sonuçlarında bulunmayan bir platformu tabloya ekleme.
+        
+                4. Bir platformda fiyat bulunamadıysa:
+                "Fiyat bulunamadı" yaz.
+        
+                5. Ürün isimlerini scraper sonuçlarından aynen kullan.
+        
+                6. Güncel fiyatları scraper sonuçlarından aynen kullan.
+                Yeni veya tahmini fiyat oluşturma.
+        
+                7. ÖNCEKİ FİYAT YOKSA:
+                "Yok", "Yok TL", "null", "null TL" veya benzeri ifadeler kullanma.
+                Bunun yerine sadece "-" karakteri kullan.
+        
+                Örnek:
+                Güncel Fiyat: 599.00 TL
+                Önceki Fiyat: -
+        
+                8. İNDİRİM BİLGİSİ YOKSA:
+                "Yok" veya "Yok TL" yazma.
+                Bunun yerine sadece "-" karakteri kullan.
+        
+                9. İndirim bilgisi varsa scraper sonucundaki bilgiyi aynen kullan.
+        
+                10. Güncel fiyatı en düşük olan ürünü belirle.
+        
+                11. En ucuz ürünü tablonun altında şu formatta belirt:
+        
+                **En Ucuz Fiyat:** Platform - Fiyat TL
+        
+                12. Fiyat karşılaştırması dışında gereksiz uzun açıklamalar yapma.
+        
+                13. Sadece yukarıdaki scraper sonuçlarını kullan.
+        
+                14. Scraper sonucunda bulunmayan hiçbir fiyatı veya bilgiyi tahmin etme.
+        
+                15. Markdown tablosunda sütun başlıklarının düzgün ayrıldığından emin ol.
+        
+                16. Örnek indirim formatı:
+                %%10.00 indirim (99.99 TL Kazanç)
+        
                 """.formatted(productName, scraperResults);
 
         String finalResponse =
@@ -274,4 +319,3 @@ public class AiChatService {
         );
     }
 }
-

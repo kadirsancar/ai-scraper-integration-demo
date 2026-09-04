@@ -1,107 +1,993 @@
 <!DOCTYPE html>
 <html lang="tr">
+
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0"
+    >
+
     <title>AIPage Asistan</title>
-    <!-- Tailwind ve İkonlar -->
+
+
+    <!-- =====================================================
+         TAILWIND
+         ===================================================== -->
+
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 
-    <!-- Markdown desteği için (Yapay zekanın yanıtlarının düzgün ve şık görünmesi için) -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
-    <!-- Özel CSS'imiz -->
-    <link href="/css/style.css" rel="stylesheet">
+    <!-- =====================================================
+         FONT AWESOME
+         ===================================================== -->
+
+    <link
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+            rel="stylesheet"
+    >
+
+
+    <!-- =====================================================
+         MARKDOWN
+         ===================================================== -->
+
+    <script
+            src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"
+    ></script>
+
+
+    <!-- =====================================================
+         ÖZEL CSS
+         ===================================================== -->
+
+    <link
+            href="/css/style.css"
+            rel="stylesheet"
+    >
+
 </head>
+
+
 <body class="flex h-screen bg-white text-gray-800 font-sans">
 
 
-<!-- Sol Menü (Sidebar) -->
-<div class="w-64 bg-gray-50 border-r border-gray-200 flex flex-col hidden md:flex">
-    <div class="p-4">
-        <!-- Yeni Sohbet Butonu: Yazı lacivert, ikon kırmızı, hover çerçevesi lacivert -->
-        <button onclick="location.reload()" class="w-full flex items-center gap-3 bg-white border border-gray-300 rounded-lg px-4 py-2 hover:border-[#2B2E72] hover:bg-gray-50 transition-all font-medium text-[#2B2E72]">
-            <i class="fa-solid fa-pen-to-square text-[#E30613]"></i> Yeni sohbet
-        </button>
-    </div>
+<!-- =========================================================
+     SIDEBAR
+     ========================================================= -->
 
-    <div class="flex-1 overflow-y-auto no-scrollbar p-4 pt-0">
-        <!-- Yetkinlikler Başlığı: Koru Laciverti -->
-        <div class="text-xs font-semibold text-[#2B2E72] mb-3 mt-4 uppercase tracking-wide">Yetkinlikler</div>
-        <ul class="space-y-1 text-sm text-gray-700">
-            <!-- Menü Elemanları: İkonlar kırmızı, üzerine gelince (hover) yazılar lacivert oluyor -->
-            <li class="p-2 hover:bg-gray-200 hover:text-[#2B2E72] rounded cursor-pointer flex items-center gap-2 transition-colors"><i class="fa-regular fa-comment text-[#E30613]"></i> Sohbet</li>
-            <li class="p-2 hover:bg-gray-200 hover:text-[#2B2E72] rounded cursor-pointer flex items-center gap-2 transition-colors"><i class="fa-regular fa-image text-[#E30613]"></i> Görsel Analizi</li>
-            <li class="p-2 hover:bg-gray-200 hover:text-[#2B2E72] rounded cursor-pointer flex items-center gap-2 transition-colors"><i class="fa-regular fa-file-pdf text-[#E30613]"></i> PDF & Evrak Okuma</li>
-            <li class="p-2 hover:bg-gray-200 hover:text-[#2B2E72] rounded cursor-pointer flex items-center gap-2 transition-colors"><i class="fa-solid fa-magnifying-glass text-[#E30613]"></i> Teşhis & Kimlik Çıkarıcı</li>
-        </ul>
-    </div>
-
-    <!-- Kullanıcı Profili (Koru Laciverti) -->
-    <div class="p-4 border-t border-gray-200 flex items-center gap-3 hover:bg-gray-100 cursor-pointer transition-colors">
-        <div class="w-8 h-8 bg-[#2B2E72] rounded-full flex items-center justify-center text-white font-bold text-sm shadow-sm">K</div>
-        <div class="text-sm font-medium text-gray-800">Kadir Sancar<br><span class="text-xs text-gray-500 font-normal">Developer</span></div>
-    </div>
-</div>
+<div class="
+    w-64
+    bg-gray-50
+    border-r
+    border-gray-200
+    flex
+    flex-col
+    hidden
+    md:flex
+">
 
 
-   
+    <!-- =====================================================
+         AIPage LOGO / BRAND
+         ===================================================== -->
 
-<!-- Ana Sohbet Alanı -->
-<div class="flex-1 flex flex-col relative h-full">
+    <div class="px-5 pt-5 pb-4">
 
-    <!-- Header (Mobil için) -->
-    <div class="md:hidden p-4 border-b flex justify-between items-center bg-white">
-        <span class="font-bold text-lg">AIPage</span>
-        <i class="fa-solid fa-bars text-xl cursor-pointer"></i>
-    </div>
+        <div class="flex items-center gap-3">
 
+            <div class="
+                w-10
+                h-10
+                rounded-xl
+                bg-[#2B2E72]
+                flex
+                items-center
+                justify-center
+                shadow-sm
+            ">
 
-    <!-- Sohbet Geçmişi Alanı (Nefes alma boşluğu pb-48 olarak ayarlandı) -->
-    <div id="chatBox" class="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 pb-48 flex flex-col">
-        <div id="welcomeScreen" class="flex flex-col items-center justify-center h-full mt-20">
+                <i class="
+                    fa-solid
+                    fa-wand-magic-sparkles
+                    text-white
+                    text-sm
+                "></i>
 
-            <!-- Koru Sigorta Logosu -->
-            <img src="/assets/images/logo.png" alt="Koru Sigorta Logo" class="w-48 mb-6 opacity-40 pointer-events-none">
-
-            <!-- Başlık (Koru Laciverti) -->
-            <h1 class="text-2xl md:text-3xl font-semibold mb-8 text-center text-[#2B2E72]">Nasıl yardımcı olabilirim Kadir?</h1>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-2xl">
-                <div class="border rounded-xl p-4 hover:bg-gray-50 cursor-pointer text-sm text-gray-600 flex items-center gap-3">
-                    <!-- İkonlar (Koru Kırmızısı) -->
-                    <i class="fa-regular fa-image text-[#E30613] text-lg"></i> Görsel Analizi
-                </div>
-                <div class="border rounded-xl p-4 hover:bg-gray-50 cursor-pointer text-sm text-gray-600 flex items-center gap-3">
-                    <i class="fa-solid fa-file-pdf text-[#E30613] text-lg"></i> PDF & Evrak Okuma
-                </div>
             </div>
+
+
+            <div>
+
+                <div class="
+                    font-bold
+                    text-[#2B2E72]
+                    text-lg
+                    leading-none
+                ">
+                    AIPage
+                </div>
+
+                <div class="
+                    text-[11px]
+                    text-gray-400
+                    mt-1
+                ">
+                    AI Assistant
+                </div>
+
+            </div>
+
         </div>
+
     </div>
 
-    <!-- Girdi Alanı (Input) -->
-    <div class="absolute bottom-0 left-0 w-full bg-gradient-to-t from-white via-white to-transparent pt-6 pb-6 px-4 md:px-8">
-        <!-- Focus durumu Koru Laciverti -->
-        <div class="max-w-4xl mx-auto relative flex items-center bg-gray-100 rounded-2xl p-2 border border-gray-200 shadow-sm focus-within:ring-1 focus-within:ring-[#2B2E72] focus-within:bg-white transition-all">
 
-            <label for="fileUpload" class="p-3 text-gray-500 hover:text-gray-800 cursor-pointer rounded-full hover:bg-gray-200 transition">
-                <i class="fa-solid fa-plus text-lg"></i>
-            </label>
-            <input type="file" id="fileUpload" class="hidden" multiple>
+    <!-- =====================================================
+         USER PROFILE
+         ===================================================== -->
 
-            <input type="text" id="promptInput" class="flex-1 bg-transparent border-none outline-none p-2 text-gray-800 placeholder-gray-500" placeholder="Herhangi bir şey sor...">
+    <div class="px-4 pb-4">
 
-            <!-- Gönder Butonu Kırmızı (Koru Kurumsal) Olarak Güncellendi -->
-            <button id="sendButton" class="p-3 text-white bg-[#E30613] hover:bg-[#B3040E] cursor-pointer rounded-xl transition ml-2 flex items-center justify-center w-10 h-10">
-                <i class="fa-solid fa-arrow-up text-sm"></i>
-            </button>
+        <div class="
+            profile-card
+            bg-white
+            border
+            border-gray-200
+            rounded-xl
+            p-3
+            flex
+            items-center
+            gap-3
+            cursor-pointer
+            transition-all
+            duration-200
+        ">
+
+            <div class="
+                profile-avatar
+                w-10
+                h-10
+                rounded-full
+                bg-[#2B2E72]
+                flex
+                items-center
+                justify-center
+                text-white
+                font-semibold
+                text-sm
+                shadow-sm
+                flex-shrink-0
+            ">
+                K
+            </div>
+
+
+            <div class="
+                flex-1
+                min-w-0
+            ">
+
+                <div class="
+                    text-sm
+                    font-semibold
+                    text-gray-800
+                    truncate
+                ">
+                    Kadir Sancar
+                </div>
+
+                <div class="
+                    text-xs
+                    text-gray-400
+                    mt-0.5
+                    flex
+                    items-center
+                    gap-1.5
+                ">
+
+                    <span class="
+                        w-1.5
+                        h-1.5
+                        rounded-full
+                        bg-green-500
+                    "></span>
+
+                    Developer
+
+                </div>
+
+            </div>
+
+
+            <i class="
+                fa-solid
+                fa-ellipsis
+                text-gray-400
+                text-sm
+            "></i>
+
         </div>
-        <div class="text-center text-xs text-gray-400 mt-3">AIPage hata yapabilir. Önemli bilgileri kontrol edin.</div>
+
     </div>
+
+
+    <!-- =====================================================
+         NEW CHAT
+         ===================================================== -->
+
+    <div class="px-4 pb-4">
+
+        <button
+                onclick="location.reload()"
+                class="
+                    new-chat-button
+                    w-full
+                    flex
+                    items-center
+                    gap-3
+                    bg-white
+                    border
+                    border-gray-300
+                    rounded-xl
+                    px-4
+                    py-2.5
+                    hover:border-[#2B2E72]
+                    hover:bg-gray-50
+                    transition-all
+                    duration-200
+                    font-medium
+                    text-[#2B2E72]
+                "
+        >
+
+            <i class="
+                fa-solid
+                fa-pen-to-square
+                text-[#E30613]
+            "></i>
+
+            Yeni sohbet
+
+        </button>
+
+    </div>
+
+
+    <!-- =====================================================
+         SIDEBAR CONTENT
+         ===================================================== -->
+
+    <div class="
+        flex-1
+        overflow-y-auto
+        no-scrollbar
+        px-4
+    ">
+
+
+        <!-- SOHBET -->
+
+        <div class="
+            text-[11px]
+            font-semibold
+            text-gray-400
+            mb-2
+            mt-1
+            uppercase
+            tracking-wider
+        ">
+            Sohbet
+        </div>
+
+
+        <ul class="space-y-1 text-sm">
+
+            <li class="
+                sidebar-item
+                active
+                p-2.5
+                rounded-lg
+                cursor-pointer
+                flex
+                items-center
+                gap-3
+                transition-all
+                duration-200
+            ">
+
+                <i class="
+                    fa-regular
+                    fa-comment
+                    w-5
+                    text-center
+                    text-[#E30613]
+                "></i>
+
+                <span>Sohbet</span>
+
+            </li>
+
+
+            <li class="
+                sidebar-item
+                p-2.5
+                rounded-lg
+                cursor-pointer
+                flex
+                items-center
+                gap-3
+                transition-all
+                duration-200
+            ">
+
+                <i class="
+                    fa-solid
+                    fa-clock-rotate-left
+                    w-5
+                    text-center
+                    text-gray-400
+                "></i>
+
+                <span>Geçmiş</span>
+
+            </li>
+
+
+            <li class="
+                sidebar-item
+                p-2.5
+                rounded-lg
+                cursor-pointer
+                flex
+                items-center
+                gap-3
+                transition-all
+                duration-200
+            ">
+
+                <i class="
+                    fa-regular
+                    fa-star
+                    w-5
+                    text-center
+                    text-gray-400
+                "></i>
+
+                <span>Favoriler</span>
+
+            </li>
+
+        </ul>
+
+
+        <!-- ARAÇLAR -->
+
+        <div class="
+            text-[11px]
+            font-semibold
+            text-gray-400
+            mb-2
+            mt-7
+            uppercase
+            tracking-wider
+        ">
+            Araçlar
+        </div>
+
+
+        <ul class="space-y-1 text-sm">
+
+            <li class="
+                sidebar-item
+                p-2.5
+                rounded-lg
+                cursor-pointer
+                flex
+                items-center
+                gap-3
+                transition-all
+                duration-200
+            ">
+
+                <i class="
+                    fa-regular
+                    fa-image
+                    w-5
+                    text-center
+                    text-gray-400
+                "></i>
+
+                <span>Görsel Analizi</span>
+
+            </li>
+
+
+            <li class="
+                sidebar-item
+                p-2.5
+                rounded-lg
+                cursor-pointer
+                flex
+                items-center
+                gap-3
+                transition-all
+                duration-200
+            ">
+
+                <i class="
+                    fa-regular
+                    fa-file-pdf
+                    w-5
+                    text-center
+                    text-gray-400
+                "></i>
+
+                <span>PDF & Evrak</span>
+
+            </li>
+
+
+            <li class="
+                sidebar-item
+                p-2.5
+                rounded-lg
+                cursor-pointer
+                flex
+                items-center
+                gap-3
+                transition-all
+                duration-200
+            ">
+
+                <i class="
+                    fa-solid
+                    fa-magnifying-glass
+                    w-5
+                    text-center
+                    text-gray-400
+                "></i>
+
+                <span>Teşhis & Analiz</span>
+
+            </li>
+
+        </ul>
+
+    </div>
+
+
+    <!-- =====================================================
+         ALT BİLGİ
+         ===================================================== -->
+
+    <div class="p-4">
+
+        <div class="
+            sidebar-info
+            bg-white
+            border
+            border-gray-200
+            rounded-xl
+            p-3
+            transition-all
+            duration-200
+        ">
+
+            <div class="
+                flex
+                items-center
+                gap-2
+                mb-2
+            ">
+
+                <div class="
+                    w-7
+                    h-7
+                    rounded-lg
+                    bg-[#2B2E72]
+                    flex
+                    items-center
+                    justify-center
+                ">
+
+                    <i class="
+                        fa-solid
+                        fa-wand-magic-sparkles
+                        text-white
+                        text-[10px]
+                    "></i>
+
+                </div>
+
+
+                <div>
+
+                    <div class="
+                        text-xs
+                        font-semibold
+                        text-gray-700
+                    ">
+                        AIPage
+                    </div>
+
+                    <div class="
+                        text-[10px]
+                        text-gray-400
+                    ">
+                        AI Assistant
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="
+                text-[10px]
+                text-gray-400
+                flex
+                items-center
+                gap-1.5
+            ">
+
+                <span class="status-dot"></span>
+
+                Sistem aktif
+
+            </div>
+
+        </div>
+
+    </div>
+
 </div>
 
-<!-- Modüler JavaScript Dosyamızın Bağlantısı -->
-<script type="module" src="/js/main.js"></script>
+
+<!-- =========================================================
+     ANA SOHBET ALANI
+     ========================================================= -->
+
+<div class="
+    flex-1
+    flex
+    flex-col
+    relative
+    h-full
+">
+
+
+    <!-- =====================================================
+         MOBİL HEADER
+         ===================================================== -->
+
+    <div class="
+        md:hidden
+        p-4
+        border-b
+        flex
+        justify-between
+        items-center
+        bg-white
+    ">
+
+        <div class="flex items-center gap-2">
+
+            <div class="
+                w-8
+                h-8
+                rounded-lg
+                bg-[#2B2E72]
+                flex
+                items-center
+                justify-center
+            ">
+
+                <i class="
+                    fa-solid
+                    fa-wand-magic-sparkles
+                    text-white
+                    text-xs
+                "></i>
+
+            </div>
+
+
+            <span class="
+                font-bold
+                text-lg
+                text-[#2B2E72]
+            ">
+                AIPage
+            </span>
+
+        </div>
+
+
+        <i class="
+            fa-solid
+            fa-bars
+            text-xl
+            cursor-pointer
+            text-gray-600
+        "></i>
+
+    </div>
+
+
+    <!-- =====================================================
+         CHAT BOX
+         ===================================================== -->
+
+    <div
+            id="chatBox"
+            class="
+                flex-1
+                overflow-y-auto
+                p-4
+                md:p-8
+                space-y-6
+                pb-48
+                flex
+                flex-col
+            "
+    >
+
+
+        <!-- =================================================
+             WELCOME SCREEN
+             ================================================= -->
+
+        <div
+                id="welcomeScreen"
+                class="
+                    flex
+                    flex-col
+                    items-center
+                    justify-center
+                    h-full
+                    mt-10
+                "
+        >
+
+            <div class="
+                welcome-icon
+                w-20
+                h-20
+                rounded-2xl
+                bg-[#2B2E72]
+                flex
+                items-center
+                justify-center
+                shadow-lg
+                mb-6
+            ">
+
+                <i class="
+                    fa-solid
+                    fa-wand-magic-sparkles
+                    text-white
+                    text-3xl
+                "></i>
+
+            </div>
+
+
+            <h1 class="
+                text-2xl
+                md:text-3xl
+                font-semibold
+                mb-2
+                text-center
+                text-[#2B2E72]
+            ">
+                Nasıl yardımcı olabilirim Kadir?
+            </h1>
+
+
+            <p class="
+                text-sm
+                text-gray-400
+                mb-8
+                text-center
+                max-w-md
+            ">
+                AIPage ile ürünleri araştırın,
+                karşılaştırın ve analiz edin.
+            </p>
+
+
+            <!-- ÖNERİLER -->
+
+            <div class="
+                grid
+                grid-cols-1
+                md:grid-cols-2
+                gap-4
+                w-full
+                max-w-2xl
+            ">
+
+
+                <!-- GÖRSEL -->
+
+                <div class="
+                    border
+                    border-gray-200
+                    rounded-xl
+                    p-4
+                    hover:bg-gray-50
+                    hover:border-gray-300
+                    cursor-pointer
+                    text-sm
+                    text-gray-600
+                    flex
+                    items-center
+                    gap-3
+                    transition-all
+                ">
+
+                    <div class="
+                        w-9
+                        h-9
+                        rounded-lg
+                        bg-red-50
+                        flex
+                        items-center
+                        justify-center
+                    ">
+
+                        <i class="
+                            fa-regular
+                            fa-image
+                            text-[#E30613]
+                        "></i>
+
+                    </div>
+
+
+                    <div>
+
+                        <div class="
+                            font-medium
+                            text-gray-700
+                        ">
+                            Görsel Analizi
+                        </div>
+
+                        <div class="
+                            text-xs
+                            text-gray-400
+                            mt-0.5
+                        ">
+                            Görselleri analiz edin
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- PDF -->
+
+                <div class="
+                    border
+                    border-gray-200
+                    rounded-xl
+                    p-4
+                    hover:bg-gray-50
+                    hover:border-gray-300
+                    cursor-pointer
+                    text-sm
+                    text-gray-600
+                    flex
+                    items-center
+                    gap-3
+                    transition-all
+                ">
+
+                    <div class="
+                        w-9
+                        h-9
+                        rounded-lg
+                        bg-red-50
+                        flex
+                        items-center
+                        justify-center
+                    ">
+
+                        <i class="
+                            fa-solid
+                            fa-file-pdf
+                            text-[#E30613]
+                        "></i>
+
+                    </div>
+
+
+                    <div>
+
+                        <div class="
+                            font-medium
+                            text-gray-700
+                        ">
+                            PDF & Evrak
+                        </div>
+
+                        <div class="
+                            text-xs
+                            text-gray-400
+                            mt-0.5
+                        ">
+                            Belgeleri analiz edin
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         INPUT AREA
+         ===================================================== -->
+
+    <div class="
+        absolute
+        bottom-0
+        left-0
+        w-full
+        bg-gradient-to-t
+        from-white
+        via-white
+        to-transparent
+        pt-6
+        pb-6
+        px-4
+        md:px-8
+    ">
+
+
+        <!-- =================================================
+             PROMPT BAR
+             ================================================= -->
+
+        <div
+                class="
+                    prompt-bar
+                    max-w-4xl
+                    mx-auto
+                    relative
+                    flex
+                    items-center
+                    bg-gray-100
+                    rounded-2xl
+                    p-2
+                    border
+                    border-gray-200
+                    shadow-sm
+                    focus-within:ring-1
+                    focus-within:ring-[#2B2E72]
+                    focus-within:bg-white
+                "
+        >
+
+
+            <!-- DOSYA -->
+
+            <label
+                    for="fileUpload"
+                    class="
+                        p-3
+                        text-gray-500
+                        hover:text-gray-800
+                        cursor-pointer
+                        rounded-full
+                        hover:bg-gray-200
+                        transition
+                    "
+            >
+
+                <i class="
+                    fa-solid
+                    fa-plus
+                    text-lg
+                "></i>
+
+            </label>
+
+
+            <input
+                    type="file"
+                    id="fileUpload"
+                    class="hidden"
+                    multiple
+            >
+
+
+            <!-- INPUT -->
+
+            <input
+                    type="text"
+                    id="promptInput"
+                    class="
+                        flex-1
+                        bg-transparent
+                        border-none
+                        outline-none
+                        p-2
+                        text-gray-800
+                        placeholder-gray-500
+                    "
+                    placeholder="Herhangi bir şey sor..."
+            >
+
+
+            <!-- GÖNDER -->
+
+            <button
+                    id="sendButton"
+                    class="
+                        p-3
+                        text-white
+                        bg-[#E30613]
+                        hover:bg-[#B3040E]
+                        cursor-pointer
+                        rounded-xl
+                        ml-2
+                        flex
+                        items-center
+                        justify-center
+                        w-10
+                        h-10
+                    "
+            >
+
+                <i class="
+                    fa-solid
+                    fa-arrow-up
+                    text-sm
+                "></i>
+
+            </button>
+
+        </div>
+
+
+        <!-- UYARI -->
+
+        <div class="
+            text-center
+            text-xs
+            text-gray-400
+            mt-3
+        ">
+            AIPage hata yapabilir. Önemli bilgileri kontrol edin.
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     JAVASCRIPT
+     ========================================================= -->
+
+<script
+        type="module"
+        src="/js/main.js"
+></script>
+
+
 </body>
+
 </html>
+
