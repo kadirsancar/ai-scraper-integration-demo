@@ -14,6 +14,17 @@
 
 
     <!-- =====================================================
+         DARK MODE - SAYFA YÜKLENMEDEN ÖNCE
+         ===================================================== -->
+
+    <script>
+        if (localStorage.getItem("aipage_dark_mode") === "true") {
+            document.documentElement.classList.add("dark");
+        }
+    </script>
+
+
+    <!-- =====================================================
          TAILWIND
          ===================================================== -->
 
@@ -40,6 +51,24 @@
 
 
     <!-- =====================================================
+         EXCEL EXPORT
+         ===================================================== -->
+
+    <script
+            src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"
+    ></script>
+
+
+    <!-- =====================================================
+         PDF EXPORT
+         ===================================================== -->
+
+    <script
+            src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"
+    ></script>
+
+
+    <!-- =====================================================
          ÖZEL CSS
          ===================================================== -->
 
@@ -51,23 +80,32 @@
 </head>
 
 
-<body class="flex h-screen bg-white text-gray-800 font-sans">
+<body class="
+    flex
+    h-screen
+    bg-white
+    text-gray-800
+    font-sans
+">
 
 
 <!-- =========================================================
      SIDEBAR
      ========================================================= -->
 
-<div class="
-    w-64
-    bg-gray-50
-    border-r
-    border-gray-200
-    flex
-    flex-col
-    hidden
-    md:flex
-">
+<div
+        id="sidebar"
+        class="
+        w-64
+        bg-gray-50
+        border-r
+        border-gray-200
+        flex
+        flex-col
+        hidden
+        md:flex
+    "
+>
 
 
     <!-- =====================================================
@@ -268,14 +306,68 @@
     ">
 
 
-        <!-- SOHBET -->
+        <!-- =================================================
+             DARK MODE
+             ================================================= -->
+
+        <button
+                id="darkModeToggle"
+                type="button"
+                class="
+                    dark-mode-toggle
+                    w-full
+                    flex
+                    items-center
+                    justify-between
+                    px-3
+                    py-2.5
+                    rounded-xl
+                    text-sm
+                    mb-5
+                "
+        >
+
+            <span class="flex items-center gap-3">
+
+                <i
+                        id="darkModeIcon"
+                        class="
+                            fa-solid
+                            fa-moon
+                            w-4
+                        "
+                ></i>
+
+                <span id="darkModeText">
+                    Karanlık Mod
+                </span>
+
+            </span>
+
+
+            <span
+                    id="darkModeSwitch"
+                    class="dark-mode-switch"
+            >
+
+                <span
+                        class="dark-mode-switch-dot"
+                ></span>
+
+            </span>
+
+        </button>
+
+
+        <!-- =================================================
+             SOHBET
+             ================================================= -->
 
         <div class="
             text-[11px]
             font-semibold
             text-gray-400
             mb-2
-            mt-1
             uppercase
             tracking-wider
         ">
@@ -284,6 +376,9 @@
 
 
         <ul class="space-y-1 text-sm">
+
+
+            <!-- SOHBET -->
 
             <li class="
                 sidebar-item
@@ -306,10 +401,14 @@
                     text-[#E30613]
                 "></i>
 
-                <span>Sohbet</span>
+                <span>
+                    Sohbet
+                </span>
 
             </li>
 
+
+            <!-- GEÇMİŞ -->
 
             <li class="
                 sidebar-item
@@ -331,10 +430,14 @@
                     text-gray-400
                 "></i>
 
-                <span>Geçmiş</span>
+                <span>
+                    Geçmiş
+                </span>
 
             </li>
 
+
+            <!-- FAVORİLER -->
 
             <li class="
                 sidebar-item
@@ -356,105 +459,156 @@
                     text-gray-400
                 "></i>
 
-                <span>Favoriler</span>
+                <span>
+                    Favoriler
+                </span>
 
             </li>
 
         </ul>
 
 
-        <!-- ARAÇLAR -->
+        <!-- =================================================
+             SON ARAMALAR
+             ================================================= -->
 
-        <div class="
-            text-[11px]
-            font-semibold
-            text-gray-400
-            mb-2
-            mt-7
-            uppercase
-            tracking-wider
-        ">
-            Araçlar
+        <div
+                id="recentSearchSection"
+                class="mt-7"
+        >
+
+            <div class="
+                text-[11px]
+                font-semibold
+                text-gray-400
+                mb-2
+                uppercase
+                tracking-wider
+            ">
+                Son Aramalar
+            </div>
+
+
+            <div
+                    id="recentSearches"
+                    class="space-y-1"
+            >
+                <!-- main.js dolduracak -->
+            </div>
+
         </div>
 
 
-        <ul class="space-y-1 text-sm">
+        <!-- =================================================
+             ARAÇLAR
+             ================================================= -->
 
-            <li class="
-                sidebar-item
-                p-2.5
-                rounded-lg
-                cursor-pointer
-                flex
-                items-center
-                gap-3
-                transition-all
-                duration-200
+        <div class="mt-7">
+
+            <div class="
+                text-[11px]
+                font-semibold
+                text-gray-400
+                mb-2
+                uppercase
+                tracking-wider
             ">
-
-                <i class="
-                    fa-regular
-                    fa-image
-                    w-5
-                    text-center
-                    text-gray-400
-                "></i>
-
-                <span>Görsel Analizi</span>
-
-            </li>
+                Araçlar
+            </div>
 
 
-            <li class="
-                sidebar-item
-                p-2.5
-                rounded-lg
-                cursor-pointer
-                flex
-                items-center
-                gap-3
-                transition-all
-                duration-200
-            ">
-
-                <i class="
-                    fa-regular
-                    fa-file-pdf
-                    w-5
-                    text-center
-                    text-gray-400
-                "></i>
-
-                <span>PDF & Evrak</span>
-
-            </li>
+            <ul class="space-y-1 text-sm">
 
 
-            <li class="
-                sidebar-item
-                p-2.5
-                rounded-lg
-                cursor-pointer
-                flex
-                items-center
-                gap-3
-                transition-all
-                duration-200
-            ">
+                <!-- GÖRSEL ANALİZİ -->
 
-                <i class="
-                    fa-solid
-                    fa-magnifying-glass
-                    w-5
-                    text-center
-                    text-gray-400
-                "></i>
+                <li class="
+                    sidebar-item
+                    p-2.5
+                    rounded-lg
+                    cursor-pointer
+                    flex
+                    items-center
+                    gap-3
+                    transition-all
+                    duration-200
+                ">
 
-                <span>Teşhis & Analiz</span>
+                    <i class="
+                        fa-regular
+                        fa-image
+                        w-5
+                        text-center
+                        text-gray-400
+                    "></i>
 
-            </li>
+                    <span>
+                        Görsel Analizi
+                    </span>
 
-        </ul>
+                </li>
+
+
+                <!-- PDF -->
+
+                <li class="
+                    sidebar-item
+                    p-2.5
+                    rounded-lg
+                    cursor-pointer
+                    flex
+                    items-center
+                    gap-3
+                    transition-all
+                    duration-200
+                ">
+
+                    <i class="
+                        fa-regular
+                        fa-file-pdf
+                        w-5
+                        text-center
+                        text-gray-400
+                    "></i>
+
+                    <span>
+                        PDF & Evrak
+                    </span>
+
+                </li>
+
+
+                <!-- TEŞHİS -->
+
+                <li class="
+                    sidebar-item
+                    p-2.5
+                    rounded-lg
+                    cursor-pointer
+                    flex
+                    items-center
+                    gap-3
+                    transition-all
+                    duration-200
+                ">
+
+                    <i class="
+                        fa-solid
+                        fa-magnifying-glass
+                        w-5
+                        text-center
+                        text-gray-400
+                    "></i>
+
+                    <span>
+                        Teşhis & Analiz
+                    </span>
+
+                </li>
+
+            </ul>
+
+        </div>
 
     </div>
 
@@ -652,6 +806,9 @@
                 "
         >
 
+
+            <!-- ICON -->
+
             <div class="
                 welcome-icon
                 w-20
@@ -675,6 +832,8 @@
             </div>
 
 
+            <!-- BAŞLIK -->
+
             <h1 class="
                 text-2xl
                 md:text-3xl
@@ -686,6 +845,8 @@
                 Nasıl yardımcı olabilirim Kadir?
             </h1>
 
+
+            <!-- AÇIKLAMA -->
 
             <p class="
                 text-sm
@@ -699,7 +860,9 @@
             </p>
 
 
-            <!-- ÖNERİLER -->
+            <!-- =================================================
+                 ÖNERİLER
+                 ================================================= -->
 
             <div class="
                 grid
@@ -714,6 +877,7 @@
                 <!-- GÖRSEL -->
 
                 <div class="
+                    welcome-card
                     border
                     border-gray-200
                     rounded-xl
@@ -773,6 +937,7 @@
                 <!-- PDF -->
 
                 <div class="
+                    welcome-card
                     border
                     border-gray-200
                     rounded-xl
@@ -840,19 +1005,22 @@
          ===================================================== -->
 
     <div class="
-        absolute
-        bottom-0
-        left-0
-        w-full
-        bg-gradient-to-t
-        from-white
-        via-white
-        to-transparent
-        pt-6
-        pb-6
-        px-4
-        md:px-8
-    ">
+    absolute
+    bottom-0
+    left-0
+    w-full
+    bg-gradient-to-t
+    from-white
+    via-white
+    to-transparent
+    dark:from-[#111827]
+    dark:via-[#111827]
+    dark:to-transparent
+    pt-6
+    pb-6
+    px-4
+    md:px-8
+">
 
 
         <!-- =================================================
@@ -934,6 +1102,7 @@
 
             <button
                     id="sendButton"
+                    type="button"
                     class="
                         p-3
                         text-white
@@ -961,14 +1130,12 @@
         </div>
 
 
-        <!-- UYARI -->
+        <!-- =================================================
+             UYARI
+             ================================================= -->
 
-        <div class="
-            text-center
-            text-xs
-            text-gray-400
-            mt-3
-        ">
+        <div id="chatWarning" class="...">
+            ...
             AIPage hata yapabilir. Önemli bilgileri kontrol edin.
         </div>
 
@@ -990,4 +1157,3 @@
 </body>
 
 </html>
-

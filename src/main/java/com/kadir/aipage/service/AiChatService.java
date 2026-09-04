@@ -26,37 +26,75 @@ public class AiChatService {
     @Value("${openrouter.api.key}")
     private String openRouterApiKey;
 
-    public AiChatService(ChatMessageRepository chatMessageRepository,
-                         ECommerceTool eCommerceTool) {
+    public AiChatService(
+            ChatMessageRepository chatMessageRepository,
+            ECommerceTool eCommerceTool) {
+
         this.restTemplate = new RestTemplate();
         this.chatMessageRepository = chatMessageRepository;
         this.eCommerceTool = eCommerceTool;
     }
 
-    public record Message(String role, String content) {}
+    public record Message(
+            String role,
+            String content
+    ) {}
 
-    public record Choice(Message message) {}
+    public record Choice(
+            Message message
+    ) {}
 
-    public record OpenRouterResponse(List<Choice> choices) {}
+    public record OpenRouterResponse(
+            List<Choice> choices
+    ) {}
+
+    // =========================================================
+    // ANA MESAJ METODU
+    // =========================================================
 
     public String sendMessage(String prompt) {
 
         if (prompt == null || prompt.isBlank()) {
+
             return "Lütfen bir ürün adı veya ürün URL'si girin.";
         }
 
-        String trimmedPrompt = prompt.trim();
+        String trimmedPrompt =
+                prompt.trim();
 
-        /*
-         * 1. Kullanıcı doğrudan ürün URL'si gönderdiyse
-         */
+        // =====================================================
+        // 1. KULLANICI DİREKT ÜRÜN URL'Sİ GÖNDERDİ
+        // =====================================================
+
         if (trimmedPrompt.startsWith("http://")
                 || trimmedPrompt.startsWith("https://")) {
 
-            System.out.println("🔗 Ürün URL'si algılandı.");
+            System.out.println(
+                    "🔗 Ürün URL'si algılandı."
+            );
 
             String scraperResult =
-                    eCommerceTool.getProductPrice(trimmedPrompt);
+                    eCommerceTool.getProductPrice(
+                            trimmedPrompt
+                    );
+
+            /*
+             * Scraper sonucundaki gerçek URL'yi al.
+             */
+            String productUrl =
+                    extractProductUrl(
+                            scraperResult
+                    );
+
+            /*
+             * PRODUCT_URL bilgisini AI'ye göndermiyoruz.
+             *
+             * Çünkü URL'yi AI'nin değiştirmesini istemiyoruz.
+             */
+            String cleanScraperResult =
+                    removeProductUrl(
+                            scraperResult
+                    );
 
             String analysisPrompt =
                     """
@@ -74,23 +112,45 @@ public class AiChatService {
                     Önceki fiyat bilgisi yoksa "Yok TL" veya "0 TL" yazma.
                     Bunun yerine sadece "-" kullan.
 
-                    İndirim bilgisi yoksa "Yok" veya "%0" yazma.
+                    İndirim bilgisi yoksa "Yok" veya "%%0" yazma.
                     Bunun yerine sadece "-" kullan.
 
                     Verilen bilgiler dışında fiyat uydurma.
-                    """.formatted(scraperResult);
 
-            String response = callOpenRouter(analysisPrompt);
+                    Markdown kullanabilirsin ancak ürün URL'si oluşturma.
+                    """.formatted(
+                            cleanScraperResult
+                    );
 
-            saveMessage(prompt, response);
+            String response =
+                    callOpenRouter(
+                            analysisPrompt
+                    );
+
+            /*
+             * URL'yi OpenRouter'dan bağımsız olarak ekliyoruz.
+             */
+            response =
+                    addProductUrl(
+                            response,
+                            productUrl
+                    );
+
+            saveMessage(
+                    prompt,
+                    response
+            );
 
             return response;
         }
 
-        /*
-         * 2. Kullanıcı doğal bir cümle yazdıysa
-         */
-        System.out.println("🤖 Ürün adı OpenRouter tarafından çıkarılıyor...");
+        // =====================================================
+        // 2. KULLANICI DOĞAL BİR CÜMLE YAZDI
+        // =====================================================
+
+        System.out.println(
+                "🤖 Ürün adı OpenRouter tarafından çıkarılıyor..."
+        );
 
         String productExtractionPrompt =
                 """
@@ -113,115 +173,276 @@ public class AiChatService {
 
                 "Sony WH-1000XM5 fiyatına bakar mısın?"
                 -> Sony WH-1000XM5
-                """.formatted(trimmedPrompt);
+                """.formatted(
+                        trimmedPrompt
+                );
 
         String productName =
-                callOpenRouter(productExtractionPrompt).trim();
+                callOpenRouter(
+                        productExtractionPrompt
+                ).trim();
 
         if (productName.isBlank()) {
 
             String response =
-                    callOpenRouter(trimmedPrompt);
+                    callOpenRouter(
+                            trimmedPrompt
+                    );
 
-            saveMessage(prompt, response);
+            saveMessage(
+                    prompt,
+                    response
+            );
 
             return response;
         }
 
         System.out.println(
-                "🔍 Bulunan ürün: " + productName
+                "🔍 Bulunan ürün: "
+                        + productName
         );
 
-        /*
-         * 3. Ürün adıyla bütün scraper'ları çalıştır
-         */
+        // =====================================================
+        // 3. BÜTÜN SCRAPER'LARI ÇALIŞTIR
+        // =====================================================
+
         String scraperResults =
-                eCommerceTool.analyzeProductByName(productName);
+                eCommerceTool.analyzeProductByName(
+                        productName
+                );
 
         /*
-         * 4. Scraper sonuçlarını OpenRouter'a gönder
+         * EN ÖNEMLİ KISIM:
+         *
+         * OpenRouter'a göndermeden önce gerçek URL'yi
+         * scraper sonucundan ayırıyoruz.
          */
+        String productUrl =
+                extractProductUrl(
+                        scraperResults
+                );
+
+        /*
+         * PRODUCT_URL satırını AI'ye göndermiyoruz.
+         */
+        String cleanScraperResults =
+                removeProductUrl(
+                        scraperResults
+                );
+
+        // =====================================================
+        // 4. SCRAPER SONUÇLARINI OPENROUTER'A GÖNDER
+        // =====================================================
+
         String comparisonPrompt =
                 """
                 Kullanıcı şu ürünün fiyatını araştırıyor:
-        
+
                 %s
-        
+
                 Aşağıdaki bilgiler e-ticaret sitelerine girilerek
                 canlı olarak alınmıştır:
-        
+
                 %s
-        
+
                 Bu bilgileri analiz ederek kullanıcıya Türkçe cevap ver.
-        
+
                 ÇOK ÖNEMLİ KURALLAR:
-        
+
                 1. Fiyat karşılaştırması yapılıyorsa MUTLAKA Markdown tablo oluştur.
-        
+
                 2. Tablo formatı:
-        
+
                 | Platform | Ürün | Güncel Fiyat | Önceki Fiyat | İndirim |
                 |---|---|---:|---:|---:|
                 | Amazon | ... | ... TL | ... | ... |
                 | Hepsiburada | ... | ... TL | ... | ... |
                 | Trendyol | ... | ... TL | ... | ... |
                 | PttAVM | ... | ... TL | ... | ... |
-        
+
                 3. Scraper sonuçlarında bulunmayan bir platformu tabloya ekleme.
-        
+
                 4. Bir platformda fiyat bulunamadıysa:
                 "Fiyat bulunamadı" yaz.
-        
+
                 5. Ürün isimlerini scraper sonuçlarından aynen kullan.
-        
+
                 6. Güncel fiyatları scraper sonuçlarından aynen kullan.
                 Yeni veya tahmini fiyat oluşturma.
-        
+
                 7. ÖNCEKİ FİYAT YOKSA:
                 "Yok", "Yok TL", "null", "null TL" veya benzeri ifadeler kullanma.
                 Bunun yerine sadece "-" karakteri kullan.
-        
-                Örnek:
-                Güncel Fiyat: 599.00 TL
-                Önceki Fiyat: -
-        
+
                 8. İNDİRİM BİLGİSİ YOKSA:
                 "Yok" veya "Yok TL" yazma.
                 Bunun yerine sadece "-" karakteri kullan.
-        
+
                 9. İndirim bilgisi varsa scraper sonucundaki bilgiyi aynen kullan.
-        
+
                 10. Güncel fiyatı en düşük olan ürünü belirle.
-        
+
                 11. En ucuz ürünü tablonun altında şu formatta belirt:
-        
+
                 **En Ucuz Fiyat:** Platform - Fiyat TL
-        
+
                 12. Fiyat karşılaştırması dışında gereksiz uzun açıklamalar yapma.
-        
+
                 13. Sadece yukarıdaki scraper sonuçlarını kullan.
-        
+
                 14. Scraper sonucunda bulunmayan hiçbir fiyatı veya bilgiyi tahmin etme.
-        
+
                 15. Markdown tablosunda sütun başlıklarının düzgün ayrıldığından emin ol.
-        
+
                 16. Örnek indirim formatı:
                 %%10.00 indirim (99.99 TL Kazanç)
-        
-                """.formatted(productName, scraperResults);
+
+                17. Ürün URL'si oluşturma veya tahmin etme.
+                URL bilgisi sistem tarafından ayrıca eklenecektir.
+                """.formatted(
+                        productName,
+                        cleanScraperResults
+                );
 
         String finalResponse =
-                callOpenRouter(comparisonPrompt);
+                callOpenRouter(
+                        comparisonPrompt
+                );
 
-        /*
-         * 5. Sohbet geçmişine kaydet
-         */
-        saveMessage(prompt, finalResponse);
+        // =====================================================
+        // 5. GERÇEK URL'Yİ AI CEVABINA EKLE
+        // =====================================================
+
+        finalResponse =
+                addProductUrl(
+                        finalResponse,
+                        productUrl
+                );
+
+        // =====================================================
+        // 6. SOHBET GEÇMİŞİNE KAYDET
+        // =====================================================
+
+        saveMessage(
+                prompt,
+                finalResponse
+        );
 
         return finalResponse;
     }
 
-    private String callOpenRouter(String promptContent) {
+    // =========================================================
+    // PRODUCT URL ÇIKAR
+    // =========================================================
+
+    private String extractProductUrl(
+            String scraperResult) {
+
+        if (scraperResult == null
+                || scraperResult.isBlank()) {
+
+            return null;
+        }
+
+        String marker =
+                "PRODUCT_URL:";
+
+        int startIndex =
+                scraperResult.indexOf(marker);
+
+        if (startIndex == -1) {
+
+            return null;
+        }
+
+        startIndex +=
+                marker.length();
+
+        int endIndex =
+                scraperResult.indexOf(
+                        "\n",
+                        startIndex
+                );
+
+        if (endIndex == -1) {
+
+            endIndex =
+                    scraperResult.length();
+        }
+
+        String url =
+                scraperResult
+                        .substring(
+                                startIndex,
+                                endIndex
+                        )
+                        .trim();
+
+        if (url.startsWith("http://")
+                || url.startsWith("https://")) {
+
+            return url;
+        }
+
+        return null;
+    }
+
+    // =========================================================
+    // PRODUCT URL SATIRINI TEMİZLE
+    // =========================================================
+
+    private String removeProductUrl(
+            String text) {
+
+        if (text == null
+                || text.isBlank()) {
+
+            return text;
+        }
+
+        return text.replaceAll(
+                "(?m)^PRODUCT_URL:.*\\R?",
+                ""
+        ).trim();
+    }
+
+    // =========================================================
+    // URL'Yİ AI CEVABINA EKLE
+    // =========================================================
+
+    private String addProductUrl(
+            String response,
+            String productUrl) {
+
+        if (response == null) {
+
+            response = "";
+        }
+
+        if (productUrl == null
+                || productUrl.isBlank()) {
+
+            return response;
+        }
+
+        /*
+         * URL'yi kullanıcıya açık şekilde ekliyoruz.
+         *
+         * Frontend bunu daha sonra gerçek butona
+         * dönüştürebilir.
+         */
+        return response.trim()
+                + "\n\n"
+                + "🔗 Ürüne Git:\n"
+                + productUrl;
+    }
+
+    // =========================================================
+    // OPENROUTER
+    // =========================================================
+
+    private String callOpenRouter(
+            String promptContent) {
 
         String url =
                 "https://openrouter.ai/api/v1/chat/completions";
@@ -237,7 +458,10 @@ public class AiChatService {
         requestBody.put(
                 "messages",
                 Collections.singletonList(
-                        new Message("user", promptContent)
+                        new Message(
+                                "user",
+                                promptContent
+                        )
                 )
         );
 
@@ -301,6 +525,10 @@ public class AiChatService {
         }
     }
 
+    // =========================================================
+    // CHAT KAYDI
+    // =========================================================
+
     private void saveMessage(
             String prompt,
             String response) {
@@ -308,8 +536,14 @@ public class AiChatService {
         ChatMessage messageToSave =
                 new ChatMessage();
 
-        messageToSave.setUserPrompt(prompt);
-        messageToSave.setAiResponse(response);
+        messageToSave.setUserPrompt(
+                prompt
+        );
+
+        messageToSave.setAiResponse(
+                response
+        );
+
         messageToSave.setCreatedAt(
                 LocalDateTime.now()
         );

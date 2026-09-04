@@ -1,703 +1,1631 @@
-    /* =========================================================
-       GENEL SCROLLBAR
-       ========================================================= */
+        /* =========================================================
+           GENEL SCROLLBAR
+           ========================================================= */
 
-    .no-scrollbar::-webkit-scrollbar {
-        display: none;
-    }
-
-    .no-scrollbar {
-        -ms-overflow-style: none;
-        scrollbar-width: none;
-    }
-
-
-    /* =========================================================
-       CHAT ALANI
-       ========================================================= */
-
-    #chatBox {
-        flex: 1;
-        min-height: 0;
-        overflow-y: auto;
-        overflow-x: hidden;
-        scroll-behavior: auto;
-    }
-
-    /* Chat scrollbar */
-    #chatBox::-webkit-scrollbar {
-        width: 6px;
-    }
-
-    #chatBox::-webkit-scrollbar-track {
-        background: transparent;
-    }
-
-    #chatBox::-webkit-scrollbar-thumb {
-        background: #d1d5db;
-        border-radius: 10px;
-    }
-
-    #chatBox::-webkit-scrollbar-thumb:hover {
-        background: #9ca3af;
-    }
-
-
-    /* =========================================================
-       CHAT MESAJLARI
-       ========================================================= */
-
-    .chat-message {
-        animation: messageAppear 0.25s ease-out;
-    }
-
-    @keyframes messageAppear {
-        from {
-            opacity: 0;
-            transform: translateY(8px);
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
         }
 
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-
-    /* =========================================================
-       AI MESAJI - MARKDOWN
-       ========================================================= */
-
-    .ai-content {
-        line-height: 1.7;
-        font-size: 15px;
-        min-width: 0;
-        max-width: 100%;
-        word-wrap: break-word;
-        overflow-wrap: anywhere;
-    }
-
-    .ai-content p {
-        margin-bottom: 10px;
-    }
-
-    .ai-content p:last-child {
-        margin-bottom: 0;
-    }
-
-    .ai-content strong {
-        font-weight: 700;
-        color: #1f2937;
-    }
-
-    .ai-content ul {
-        margin: 10px 0;
-        padding-left: 22px;
-        list-style-type: disc;
-    }
-
-    .ai-content ol {
-        margin: 10px 0;
-        padding-left: 22px;
-        list-style-type: decimal;
-    }
-
-    .ai-content li {
-        margin-bottom: 5px;
-    }
-
-    .ai-content h1,
-    .ai-content h2,
-    .ai-content h3 {
-        font-weight: 700;
-        color: #2B2E72;
-        margin-top: 14px;
-        margin-bottom: 8px;
-    }
-
-    .ai-content h1 {
-        font-size: 20px;
-    }
-
-    .ai-content h2 {
-        font-size: 18px;
-    }
-
-    .ai-content h3 {
-        font-size: 16px;
-    }
-
-
-    /* =========================================================
-       MARKDOWN TABLOSU
-       ========================================================= */
-
-    .ai-content table {
-        width: max-content;
-        min-width: 100%;
-        border-collapse: separate;
-        border-spacing: 0;
-        margin: 14px 0;
-        font-size: 14px;
-        border: 1px solid #e5e7eb;
-        border-radius: 10px;
-        overflow: hidden;
-        background: #ffffff;
-    }
-
-    /* Tabloyu yatay taşır */
-    .ai-content {
-        overflow-x: auto;
-    }
-
-    .ai-content th {
-        background: #f8fafc;
-        color: #2B2E72;
-        font-weight: 600;
-        text-align: left;
-        padding: 11px 14px;
-        border-bottom: 1px solid #e5e7eb;
-        white-space: nowrap;
-    }
-
-    .ai-content td {
-        padding: 11px 14px;
-        border-bottom: 1px solid #f0f0f0;
-        vertical-align: middle;
-    }
-
-    .ai-content tr:last-child td {
-        border-bottom: none;
-    }
-
-    .ai-content tbody tr {
-        transition: background 0.15s ease;
-    }
-
-    .ai-content tbody tr:hover td {
-        background: #fafafa;
-    }
-
-    /* İlk kolon */
-    .ai-content th:first-child,
-    .ai-content td:first-child {
-        font-weight: 600;
-    }
-
-    /* Fiyat kolonları */
-    .ai-content th:nth-child(3),
-    .ai-content th:nth-child(4),
-    .ai-content td:nth-child(3),
-    .ai-content td:nth-child(4) {
-        white-space: nowrap;
-    }
-
-
-    /* =========================================================
-       LINKLER
-       ========================================================= */
-
-    .ai-content a {
-        color: #2B2E72;
-        text-decoration: underline;
-        text-underline-offset: 2px;
-        transition: color 0.15s ease;
-    }
-
-    .ai-content a:hover {
-        color: #E30613;
-    }
-
-
-    /* =========================================================
-       INLINE CODE
-       ========================================================= */
-
-    .ai-content code {
-        background: #f3f4f6;
-        padding: 2px 6px;
-        border-radius: 5px;
-        font-size: 13px;
-        color: #374151;
-    }
-
-
-    /* =========================================================
-       CODE BLOCK
-       ========================================================= */
-
-    .ai-content pre {
-        background: #111827;
-        color: #f9fafb;
-        padding: 14px;
-        border-radius: 10px;
-        overflow-x: auto;
-        margin: 12px 0;
-        max-width: 100%;
-    }
-
-    .ai-content pre code {
-        background: transparent;
-        padding: 0;
-        color: inherit;
-    }
-
-
-    /* =========================================================
-       SIDEBAR
-       ========================================================= */
-
-    .sidebar-item {
-        position: relative;
-        transition:
-                background-color 0.2s ease,
-                color 0.2s ease,
-                transform 0.2s ease;
-    }
-
-    .sidebar-item:hover {
-        transform: translateX(2px);
-    }
-
-    .sidebar-item.active {
-        background: #eef0ff;
-        color: #2B2E72;
-        font-weight: 600;
-    }
-
-    .sidebar-item.active::before {
-        content: "";
-        position: absolute;
-        left: 0;
-        top: 8px;
-        bottom: 8px;
-        width: 3px;
-        border-radius: 0 4px 4px 0;
-        background: #2B2E72;
-    }
-
-
-    /* =========================================================
-       SIDEBAR İKONLARI
-       ========================================================= */
-
-    .sidebar-item i {
-        width: 20px;
-        text-align: center;
-        transition: transform 0.2s ease;
-    }
-
-    .sidebar-item:hover i {
-        transform: scale(1.08);
-    }
-
-
-    /* =========================================================
-       PROFİL ALANI
-       ========================================================= */
-
-    .profile-card {
-        transition:
-                background-color 0.2s ease,
-                transform 0.2s ease,
-                box-shadow 0.2s ease;
-    }
-
-    .profile-card:hover {
-        background: #ffffff;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
-    }
-
-
-    /* =========================================================
-       PROFİL AVATARI
-       ========================================================= */
-
-    .profile-avatar {
-        position: relative;
-    }
-
-    .profile-avatar::after {
-        content: "";
-        position: absolute;
-        right: -1px;
-        bottom: -1px;
-        width: 9px;
-        height: 9px;
-        background: #22c55e;
-        border: 2px solid #ffffff;
-        border-radius: 50%;
-    }
-
-
-    /* =========================================================
-       YENİ SOHBET BUTONU
-       ========================================================= */
-
-    .new-chat-button {
-        transition:
-                transform 0.2s ease,
-                box-shadow 0.2s ease,
-                background-color 0.2s ease;
-    }
-
-    .new-chat-button:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 5px 12px rgba(43, 46, 114, 0.15);
-    }
-
-    .new-chat-button:active {
-        transform: translateY(0);
-    }
-
-
-    /* =========================================================
-       ALT BİLGİ KARTI
-       ========================================================= */
-
-    .sidebar-status-card {
-        transition:
-                background-color 0.2s ease,
-                border-color 0.2s ease;
-    }
-
-    .sidebar-status-card:hover {
-        background: #ffffff;
-        border-color: #d1d5db;
-    }
-
-
-    /* =========================================================
-       STATUS NOKTASI
-       ========================================================= */
-
-    .status-dot {
-        width: 7px;
-        height: 7px;
-        border-radius: 50%;
-        background: #22c55e;
-        display: inline-block;
-        box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.12);
-    }
-
-
-    /* =========================================================
-       LOADING ANIMATION
-       ========================================================= */
-
-    .loading-dots {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-    }
-
-    .loading-dots span {
-        width: 6px;
-        height: 6px;
-        background: #9ca3af;
-        border-radius: 50%;
-        animation: loadingBounce 1.2s infinite ease-in-out;
-    }
-
-    .loading-dots span:nth-child(1) {
-        animation-delay: 0s;
-    }
-
-    .loading-dots span:nth-child(2) {
-        animation-delay: 0.15s;
-    }
-
-    .loading-dots span:nth-child(3) {
-        animation-delay: 0.3s;
-    }
-
-    @keyframes loadingBounce {
-        0%,
-        60%,
-        100% {
-            transform: translateY(0);
-            opacity: 0.45;
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
         }
 
-        30% {
-            transform: translateY(-4px);
-            opacity: 1;
-        }
-    }
 
-
-    /* =========================================================
-       LOADING METNİ
-       ========================================================= */
-
-    .loading-status {
-        transition: opacity 0.2s ease;
-    }
-
-
-    /* =========================================================
-       YENİ MESAJ BUTONU
-       ========================================================= */
-
-    .new-message-button {
-        animation: newMessageAppear 0.2s ease-out;
-        transition:
-                transform 0.2s ease,
-                box-shadow 0.2s ease;
-    }
-
-    .new-message-button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
-    }
-
-    @keyframes newMessageAppear {
-        from {
-            opacity: 0;
-            transform: translateY(6px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-
-    /* =========================================================
-       INPUT ALANI
-       ========================================================= */
-
-    #promptInput {
-        transition:
-                border-color 0.2s ease,
-                box-shadow 0.2s ease;
-    }
-
-    #promptInput:focus {
-        outline: none;
-        border-color: #2B2E72;
-        box-shadow: 0 0 0 3px rgba(43, 46, 114, 0.08);
-    }
-
-
-    /* =========================================================
-       GÖNDER BUTONU
-       ========================================================= */
-
-    #sendButton {
-        transition:
-                transform 0.2s ease,
-                box-shadow 0.2s ease,
-                opacity 0.2s ease;
-    }
-
-    #sendButton:not(:disabled):hover {
-        transform: translateY(-1px);
-        box-shadow: 0 5px 12px rgba(43, 46, 114, 0.18);
-    }
-
-    #sendButton:not(:disabled):active {
-        transform: translateY(0);
-    }
-
-    #sendButton:disabled {
-        cursor: not-allowed;
-        opacity: 0.55;
-    }
-
-
-    /* =========================================================
-       WELCOME EKRANI
-       ========================================================= */
-
-    .welcome-icon {
-        transition:
-                transform 0.3s ease,
-                box-shadow 0.3s ease;
-    }
-
-    .welcome-icon:hover {
-        transform: translateY(-3px);
-    }
-
-
-    /* =========================================================
-       MOBİL
-       ========================================================= */
-
-    @media (max-width: 768px) {
+        /* =========================================================
+           CHAT ALANI
+           ========================================================= */
 
         #chatBox {
-            padding-left: 12px;
-            padding-right: 12px;
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            scroll-behavior: auto;
         }
+
+        /* Chat scrollbar */
+        #chatBox::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #chatBox::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        #chatBox::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 10px;
+        }
+
+        #chatBox::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af;
+        }
+
+
+        /* =========================================================
+           CHAT MESAJLARI
+           ========================================================= */
+
+        .chat-message {
+            animation: messageAppear 0.25s ease-out;
+        }
+
+        @keyframes messageAppear {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+
+        /* =========================================================
+           AI MESAJI - MARKDOWN
+           ========================================================= */
 
         .ai-content {
-            font-size: 14px;
+            line-height: 1.7;
+            font-size: 15px;
+            min-width: 0;
+            max-width: 100%;
+            word-wrap: break-word;
+            overflow-wrap: anywhere;
         }
 
-        .ai-content table {
-            font-size: 12px;
+        .ai-content p {
+            margin-bottom: 10px;
         }
 
-        .ai-content th,
-        .ai-content td {
-            padding: 8px 9px;
-        }
-    }
-
-
-    /* =========================================================
-       KÜÇÜK MOBİL EKRAN
-       ========================================================= */
-
-    @media (max-width: 640px) {
-
-        #chatBox {
-            padding-left: 10px;
-            padding-right: 10px;
+        .ai-content p:last-child {
+            margin-bottom: 0;
         }
 
-        .ai-content {
-            font-size: 14px;
-            line-height: 1.6;
+        .ai-content strong {
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .ai-content ul {
+            margin: 10px 0;
+            padding-left: 22px;
+            list-style-type: disc;
+        }
+
+        .ai-content ol {
+            margin: 10px 0;
+            padding-left: 22px;
+            list-style-type: decimal;
+        }
+
+        .ai-content li {
+            margin-bottom: 5px;
+        }
+
+        .ai-content h1,
+        .ai-content h2,
+        .ai-content h3 {
+            font-weight: 700;
+            color: #2B2E72;
+            margin-top: 14px;
+            margin-bottom: 8px;
         }
 
         .ai-content h1 {
-            font-size: 18px;
+            font-size: 20px;
         }
 
         .ai-content h2 {
-            font-size: 17px;
+            font-size: 18px;
         }
 
         .ai-content h3 {
-            font-size: 15px;
+            font-size: 16px;
         }
+
+
+        /* =========================================================
+           MARKDOWN TABLOSU
+           ========================================================= */
 
         .ai-content table {
-            font-size: 12px;
+            width: max-content;
+            min-width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 14px 0;
+            font-size: 14px;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #ffffff;
         }
 
-        .ai-content th,
+        /* Tabloyu yatay taşır */
+        .ai-content {
+            overflow-x: auto;
+        }
+
+        .ai-content th {
+            background: #f8fafc;
+            color: #2B2E72;
+            font-weight: 600;
+            text-align: left;
+            padding: 11px 14px;
+            border-bottom: 1px solid #e5e7eb;
+            white-space: nowrap;
+        }
+
         .ai-content td {
-            padding: 7px 8px;
-        }
-    }
-
-
-    /* =========================================================
-       SEÇİM RENGİ
-       ========================================================= */
-
-    ::selection {
-        background: rgba(43, 46, 114, 0.15);
-        color: #1f2937;
-    }
-
-
-    /* =========================================================
-       FOCUS ERİŞİLEBİLİRLİK
-       ========================================================= */
-
-    button:focus-visible,
-    a:focus-visible,
-    input:focus-visible,
-    textarea:focus-visible {
-        outline: 2px solid #2B2E72;
-        outline-offset: 2px;
-    }
-
-
-    /* =========================================================
-       SMOOTH TRANSITION
-       ========================================================= */
-
-    button,
-    a {
-        -webkit-tap-highlight-color: transparent;
-    }
-
-    /* =========================================================
-       PROMPT BAR ANIMATION
-       ========================================================= */
-
-    .prompt-bar {
-        transition:
-                transform 0.2s ease,
-                box-shadow 0.25s ease,
-                border-color 0.25s ease,
-                background-color 0.25s ease;
-    }
-
-    /* Gönderme anı */
-    .prompt-bar.sending {
-        transform: scale(1.015);
-        border-color: #2B2E72;
-        box-shadow:
-                0 0 0 3px rgba(43, 46, 114, 0.08),
-                0 8px 25px rgba(43, 46, 114, 0.10);
-    }
-
-    /* AI cevap beklenirken */
-    .prompt-bar.thinking {
-        border-color: rgba(43, 46, 114, 0.35);
-        animation: promptThinking 1.8s ease-in-out infinite;
-    }
-
-    @keyframes promptThinking {
-
-        0%,
-        100% {
-            box-shadow:
-                    0 0 0 0 rgba(43, 46, 114, 0);
+            padding: 11px 14px;
+            border-bottom: 1px solid #f0f0f0;
+            vertical-align: middle;
         }
 
-        50% {
-            box-shadow:
-                    0 0 0 4px rgba(43, 46, 114, 0.07),
-                    0 8px 25px rgba(43, 46, 114, 0.08);
-        }
-    }
-
-    /* Gönderme sırasında buton */
-    .prompt-bar.sending #sendButton {
-        transform: scale(0.92);
-    }
-
-    .prompt-bar.thinking #sendButton {
-        animation: sendButtonPulse 1.2s ease-in-out infinite;
-    }
-
-    @keyframes sendButtonPulse {
-
-        0%,
-        100% {
-            transform: scale(1);
+        .ai-content tr:last-child td {
+            border-bottom: none;
         }
 
-        50% {
-            transform: scale(0.94);
+        .ai-content tbody tr {
+            transition: background 0.15s ease;
         }
-    }
 
-    /* Cevap geldiğinde */
-    .prompt-bar.completed {
-        animation: promptCompleted 0.35s ease-out;
-    }
+        .ai-content tbody tr:hover td {
+            background: #fafafa;
+        }
 
-    @keyframes promptCompleted {
+        /* İlk kolon */
+        .ai-content th:first-child,
+        .ai-content td:first-child {
+            font-weight: 600;
+        }
 
-        0% {
+        /* Fiyat kolonları */
+        .ai-content th:nth-child(3),
+        .ai-content th:nth-child(4),
+        .ai-content td:nth-child(3),
+        .ai-content td:nth-child(4) {
+            white-space: nowrap;
+        }
+
+
+        /* =========================================================
+           LINKLER
+           ========================================================= */
+
+        .ai-content a {
+            color: #2B2E72;
+            text-decoration: underline;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .ai-content a:hover {
+            opacity: 0.8;
+        }
+
+        .dark .ai-content a {
+            color: #8b8ff5;
+        }
+
+
+        /* =========================================================
+           INLINE CODE
+           ========================================================= */
+
+        .ai-content code {
+            background: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 5px;
+            font-size: 13px;
+            color: #374151;
+        }
+
+
+        /* =========================================================
+           CODE BLOCK
+           ========================================================= */
+
+        .ai-content pre {
+            background: #111827;
+            color: #f9fafb;
+            padding: 14px;
+            border-radius: 10px;
+            overflow-x: auto;
+            margin: 12px 0;
+            max-width: 100%;
+        }
+
+        .ai-content pre code {
+            background: transparent;
+            padding: 0;
+            color: inherit;
+        }
+
+
+        /* =========================================================
+           SIDEBAR
+           ========================================================= */
+
+        .sidebar-item {
+            position: relative;
+            transition:
+                    background-color 0.2s ease,
+                    color 0.2s ease,
+                    transform 0.2s ease;
+        }
+
+        .sidebar-item:hover {
+            transform: translateX(2px);
+        }
+
+        .sidebar-item.active {
+            background: #eef0ff;
+            color: #2B2E72;
+            font-weight: 600;
+        }
+
+        .sidebar-item.active::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 8px;
+            bottom: 8px;
+            width: 3px;
+            border-radius: 0 4px 4px 0;
+            background: #2B2E72;
+        }
+
+
+        /* =========================================================
+           SIDEBAR İKONLARI
+           ========================================================= */
+
+        .sidebar-item i {
+            width: 20px;
+            text-align: center;
+            transition: transform 0.2s ease;
+        }
+
+        .sidebar-item:hover i {
+            transform: scale(1.08);
+        }
+
+
+        /* =========================================================
+           PROFİL ALANI
+           ========================================================= */
+
+        .profile-card {
+            transition:
+                    background-color 0.2s ease,
+                    transform 0.2s ease,
+                    box-shadow 0.2s ease;
+        }
+
+        .profile-card:hover {
+            background: #ffffff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+        }
+
+
+        /* =========================================================
+           PROFİL AVATARI
+           ========================================================= */
+
+        .profile-avatar {
+            position: relative;
+        }
+
+        .profile-avatar::after {
+            content: "";
+            position: absolute;
+            right: -1px;
+            bottom: -1px;
+            width: 9px;
+            height: 9px;
+            background: #22c55e;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+        }
+
+
+        /* =========================================================
+           YENİ SOHBET BUTONU
+           ========================================================= */
+
+        .new-chat-button {
+            transition:
+                    transform 0.2s ease,
+                    box-shadow 0.2s ease,
+                    background-color 0.2s ease;
+        }
+
+        .new-chat-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 12px rgba(43, 46, 114, 0.15);
+        }
+
+        .new-chat-button:active {
+            transform: translateY(0);
+        }
+
+
+        /* =========================================================
+           ALT BİLGİ KARTI
+           ========================================================= */
+
+        .sidebar-status-card {
+            transition:
+                    background-color 0.2s ease,
+                    border-color 0.2s ease;
+        }
+
+        .sidebar-status-card:hover {
+            background: #ffffff;
+            border-color: #d1d5db;
+        }
+
+
+        /* =========================================================
+           STATUS NOKTASI
+           ========================================================= */
+
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #22c55e;
+            display: inline-block;
+            box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.12);
+        }
+
+
+        /* =========================================================
+           LOADING ANIMATION
+           ========================================================= */
+
+        .loading-dots {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .loading-dots span {
+            width: 6px;
+            height: 6px;
+            background: #9ca3af;
+            border-radius: 50%;
+            animation: loadingBounce 1.2s infinite ease-in-out;
+        }
+
+        .loading-dots span:nth-child(1) {
+            animation-delay: 0s;
+        }
+
+        .loading-dots span:nth-child(2) {
+            animation-delay: 0.15s;
+        }
+
+        .loading-dots span:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+
+        @keyframes loadingBounce {
+            0%,
+            60%,
+            100% {
+                transform: translateY(0);
+                opacity: 0.45;
+            }
+
+            30% {
+                transform: translateY(-4px);
+                opacity: 1;
+            }
+        }
+
+
+        /* =========================================================
+           LOADING METNİ
+           ========================================================= */
+
+        .loading-status {
+            transition: opacity 0.2s ease;
+        }
+
+
+        /* =========================================================
+           YENİ MESAJ BUTONU
+           ========================================================= */
+
+        .new-message-button {
+            animation: newMessageAppear 0.2s ease-out;
+            transition:
+                    transform 0.2s ease,
+                    box-shadow 0.2s ease;
+        }
+
+        .new-message-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+        }
+
+        @keyframes newMessageAppear {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+
+        /* =========================================================
+           INPUT ALANI
+           ========================================================= */
+
+        #promptInput {
+            transition:
+                    border-color 0.2s ease,
+                    box-shadow 0.2s ease;
+        }
+
+        #promptInput:focus {
+            outline: none;
+            border-color: #2B2E72;
+            box-shadow: 0 0 0 3px rgba(43, 46, 114, 0.08);
+        }
+
+
+        /* =========================================================
+           GÖNDER BUTONU
+           ========================================================= */
+
+        #sendButton {
+            transition:
+                    transform 0.2s ease,
+                    box-shadow 0.2s ease,
+                    opacity 0.2s ease;
+        }
+
+        #sendButton:not(:disabled):hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 12px rgba(43, 46, 114, 0.18);
+        }
+
+        #sendButton:not(:disabled):active {
+            transform: translateY(0);
+        }
+
+        #sendButton:disabled {
+            cursor: not-allowed;
+            opacity: 0.55;
+        }
+
+
+        /* =========================================================
+           WELCOME EKRANI
+           ========================================================= */
+
+        .welcome-icon {
+            transition:
+                    transform 0.3s ease,
+                    box-shadow 0.3s ease;
+        }
+
+        .welcome-icon:hover {
+            transform: translateY(-3px);
+        }
+
+
+        /* =========================================================
+           MOBİL
+           ========================================================= */
+
+        @media (max-width: 768px) {
+
+            #chatBox {
+                padding-left: 12px;
+                padding-right: 12px;
+            }
+
+            .ai-content {
+                font-size: 14px;
+            }
+
+            .ai-content table {
+                font-size: 12px;
+            }
+
+            .ai-content th,
+            .ai-content td {
+                padding: 8px 9px;
+            }
+        }
+
+
+        /* =========================================================
+           KÜÇÜK MOBİL EKRAN
+           ========================================================= */
+
+        @media (max-width: 640px) {
+
+            #chatBox {
+                padding-left: 10px;
+                padding-right: 10px;
+            }
+
+            .ai-content {
+                font-size: 14px;
+                line-height: 1.6;
+            }
+
+            .ai-content h1 {
+                font-size: 18px;
+            }
+
+            .ai-content h2 {
+                font-size: 17px;
+            }
+
+            .ai-content h3 {
+                font-size: 15px;
+            }
+
+            .ai-content table {
+                font-size: 12px;
+            }
+
+            .ai-content th,
+            .ai-content td {
+                padding: 7px 8px;
+            }
+        }
+
+
+        /* =========================================================
+           SEÇİM RENGİ
+           ========================================================= */
+
+        ::selection {
+            background: rgba(43, 46, 114, 0.15);
+            color: #1f2937;
+        }
+
+
+        /* =========================================================
+           FOCUS ERİŞİLEBİLİRLİK
+           ========================================================= */
+
+        button:focus-visible,
+        a:focus-visible,
+        input:focus-visible,
+        textarea:focus-visible {
+            outline: 2px solid #2B2E72;
+            outline-offset: 2px;
+        }
+
+
+        /* =========================================================
+           SMOOTH TRANSITION
+           ========================================================= */
+
+        button,
+        a {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* =========================================================
+           PROMPT BAR ANIMATION
+           ========================================================= */
+
+        .prompt-bar {
+            transition:
+                    transform 0.2s ease,
+                    box-shadow 0.25s ease,
+                    border-color 0.25s ease,
+                    background-color 0.25s ease;
+        }
+
+        /* Gönderme anı */
+        .prompt-bar.sending {
             transform: scale(1.015);
+            border-color: #2B2E72;
             box-shadow:
-                    0 0 0 4px rgba(43, 46, 114, 0.08);
+                    0 0 0 3px rgba(43, 46, 114, 0.08),
+                    0 8px 25px rgba(43, 46, 114, 0.10);
         }
 
-        100% {
-            transform: scale(1);
-            box-shadow: none;
+        /* AI cevap beklenirken */
+        .prompt-bar.thinking {
+            border-color: rgba(43, 46, 114, 0.35);
+            animation: promptThinking 1.8s ease-in-out infinite;
         }
-    }
+
+        @keyframes promptThinking {
+
+            0%,
+            100% {
+                box-shadow:
+                        0 0 0 0 rgba(43, 46, 114, 0);
+            }
+
+            50% {
+                box-shadow:
+                        0 0 0 4px rgba(43, 46, 114, 0.07),
+                        0 8px 25px rgba(43, 46, 114, 0.08);
+            }
+        }
+
+        /* Gönderme sırasında buton */
+        .prompt-bar.sending #sendButton {
+            transform: scale(0.92);
+        }
+
+        .prompt-bar.thinking #sendButton {
+            animation: sendButtonPulse 1.2s ease-in-out infinite;
+        }
+
+        @keyframes sendButtonPulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(0.94);
+            }
+        }
+
+        /* Cevap geldiğinde */
+        .prompt-bar.completed {
+            animation: promptCompleted 0.35s ease-out;
+        }
+
+        @keyframes promptCompleted {
+
+            0% {
+                transform: scale(1.015);
+                box-shadow:
+                        0 0 0 4px rgba(43, 46, 114, 0.08);
+            }
+
+            100% {
+                transform: scale(1);
+                box-shadow: none;
+            }
+        }
+
+        /* =========================================================
+       AI MESSAGE ACTION BUTTONS
+       ========================================================= */
+
+        .ai-message-wrapper {
+            overflow-x: auto;
+        }
+
+
+        .ai-content {
+            overflow-x: auto;
+        }
+
+
+        .ai-actions {
+            overflow-x: auto;
+        }
+
+
+        .ai-action-button {
+
+            display: inline-flex;
+
+            align-items: center;
+
+            gap: 6px;
+
+            padding: 6px 9px;
+
+            border-radius: 7px;
+
+            background: transparent;
+
+            color: #6b7280;
+
+            font-size: 12px;
+
+            cursor: pointer;
+
+            white-space: nowrap;
+
+            transition:
+                    background-color 0.15s ease,
+                    color 0.15s ease,
+                    transform 0.15s ease;
+
+        }
+
+
+        .ai-action-button:hover {
+
+            background: #f3f4f6;
+
+            color: #2B2E72;
+
+        }
+
+
+        .ai-action-button:active {
+
+            transform: scale(0.96);
+
+        }
+
+
+        .ai-action-button i {
+
+            font-size: 12px;
+
+        }
+
+
+        .ai-action-button.success {
+
+            color: #16a34a;
+
+            background: #f0fdf4;
+
+        }
+
+
+        /* Excel */
+
+        .excel-button:hover {
+
+            color: #15803d;
+
+            background: #f0fdf4;
+
+        }
+
+
+        /* PDF */
+
+        .pdf-button:hover {
+
+            color: #dc2626;
+
+            background: #fef2f2;
+
+        }
+
+
+        /* =========================================================
+           SON ARAMALAR
+           ========================================================= */
+
+        #recentSearches button {
+
+            position: relative;
+
+        }
+
+
+        #recentSearches button:hover i {
+
+            color: #2B2E72;
+
+        }
+
+
+        #recentSearches button:hover {
+
+            transform: translateX(2px);
+
+        }
+
+        /* =========================================================
+       DARK MODE
+       ========================================================= */
+
+        html {
+            transition: background-color 0.25s ease;
+        }
+
+
+        /* ---------------------------------------------------------
+           Genel
+           --------------------------------------------------------- */
+
+        html.dark body {
+            background-color: #111827;
+            color: #e5e7eb;
+        }
+
+
+        /* ---------------------------------------------------------
+           Sidebar
+           --------------------------------------------------------- */
+
+        html.dark aside {
+            background-color: #111827 !important;
+            border-color: #374151 !important;
+        }
+
+        html.dark .sidebar-item {
+            color: #9ca3af;
+        }
+
+        html.dark .sidebar-item:hover {
+            background-color: #1f2937;
+            color: #ffffff;
+        }
+
+        html.dark .sidebar-item.active {
+            background-color: #2B2E72;
+            color: #ffffff;
+        }
+
+
+        /* ---------------------------------------------------------
+           AIPage logo / başlık
+           --------------------------------------------------------- */
+
+        html.dark aside .text-gray-900 {
+            color: #f9fafb !important;
+        }
+
+
+        /* ---------------------------------------------------------
+           Profil kartı
+           --------------------------------------------------------- */
+
+        html.dark .profile-card {
+            background-color: #1f2937 !important;
+            border-color: #374151 !important;
+        }
+
+        html.dark .profile-card .text-gray-900 {
+            color: #f9fafb !important;
+        }
+
+        html.dark .profile-card .text-gray-500 {
+            color: #9ca3af !important;
+        }
+
+
+        /* ---------------------------------------------------------
+           Yeni sohbet
+           --------------------------------------------------------- */
+
+        html.dark .new-chat-button {
+            background-color: #2B2E72;
+            color: #ffffff;
+        }
+
+        html.dark .new-chat-button:hover {
+            background-color: #373b91;
+        }
+
+
+        /* ---------------------------------------------------------
+           Main chat
+           --------------------------------------------------------- */
+
+        html.dark main {
+            background-color: #111827 !important;
+        }
+
+
+        /* ---------------------------------------------------------
+           Welcome screen
+           --------------------------------------------------------- */
+
+        html.dark #welcomeScreen {
+            color: #e5e7eb;
+        }
+
+        html.dark #welcomeScreen h1,
+        html.dark #welcomeScreen h2,
+        html.dark #welcomeScreen h3 {
+            color: #f9fafb !important;
+        }
+
+        html.dark #welcomeScreen p {
+            color: #9ca3af !important;
+        }
+
+
+        /* ---------------------------------------------------------
+           AI mesajları
+           --------------------------------------------------------- */
+
+        html.dark .ai-content {
+            background-color: #1f2937 !important;
+            border-color: #374151 !important;
+            color: #e5e7eb !important;
+        }
+
+
+        /* Markdown */
+
+        html.dark .ai-content h1,
+        html.dark .ai-content h2,
+        html.dark .ai-content h3,
+        html.dark .ai-content h4 {
+            color: #f9fafb;
+        }
+
+        html.dark .ai-content strong {
+            color: #ffffff;
+        }
+
+        html.dark .ai-content blockquote {
+            border-color: #4b5563;
+            color: #9ca3af;
+        }
+
+
+        /* ---------------------------------------------------------
+           AI tabloları
+           --------------------------------------------------------- */
+
+        html.dark .ai-content table {
+            background-color: #1f2937;
+            color: #e5e7eb;
+            border-color: #374151;
+        }
+
+        html.dark .ai-content th {
+            background-color: #111827;
+            color: #ffffff;
+            border-color: #374151;
+        }
+
+        html.dark .ai-content td {
+            border-color: #374151;
+        }
+
+        html.dark .ai-content tr:nth-child(even) {
+            background-color: #172033;
+        }
+
+
+        /* ---------------------------------------------------------
+           Kod
+           --------------------------------------------------------- */
+
+        html.dark .ai-content code {
+            background-color: #111827;
+            color: #e5e7eb;
+        }
+
+        html.dark .ai-content pre {
+            background-color: #0b1120;
+            border-color: #374151;
+        }
+
+
+        /* ---------------------------------------------------------
+           AI action butonları
+           --------------------------------------------------------- */
+
+        html.dark .ai-action-button {
+            background-color: #1f2937;
+            border-color: #374151;
+            color: #9ca3af;
+        }
+
+        html.dark .ai-action-button:hover {
+            background-color: #374151;
+            color: #ffffff;
+        }
+
+
+        /* ---------------------------------------------------------
+           Loading
+           --------------------------------------------------------- */
+
+        html.dark .loading-status {
+            color: #d1d5db;
+        }
+
+        html.dark .chat-message > div.bg-white {
+            background-color: #1f2937 !important;
+            border-color: #374151 !important;
+        }
+
+
+        /* ---------------------------------------------------------
+           Prompt bar
+           --------------------------------------------------------- */
+
+        html.dark .prompt-bar {
+            background-color: #1f2937 !important;
+            border-color: #374151 !important;
+        }
+
+        html.dark #promptInput {
+            background-color: transparent;
+            color: #f9fafb;
+        }
+
+        html.dark #promptInput::placeholder {
+            color: #6b7280;
+        }
+
+
+        /* ---------------------------------------------------------
+           Dark mode butonu
+           --------------------------------------------------------- */
+
+        .dark-mode-toggle {
+            color: #6b7280;
+            transition:
+                    background-color 0.2s ease,
+                    color 0.2s ease;
+        }
+
+        .dark-mode-toggle:hover {
+            background-color: #f3f4f6;
+            color: #111827;
+        }
+
+
+        /* Dark */
+
+        html.dark .dark-mode-toggle {
+            color: #d1d5db;
+        }
+
+        html.dark .dark-mode-toggle:hover {
+            background-color: #1f2937;
+            color: #ffffff;
+        }
+
+
+        /* ---------------------------------------------------------
+           Switch
+           --------------------------------------------------------- */
+
+        .dark-mode-switch {
+            width: 36px;
+            height: 20px;
+            border-radius: 999px;
+            background-color: #d1d5db;
+            padding: 2px;
+            display: flex;
+            align-items: center;
+            transition: background-color 0.25s ease;
+        }
+
+        .dark-mode-switch-dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background-color: white;
+            transition: transform 0.25s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+
+        html.dark .dark-mode-switch {
+            background-color: #2B2E72;
+        }
+
+        html.dark .dark-mode-switch-dot {
+            transform: translateX(16px);
+        }
+
+
+        /* ---------------------------------------------------------
+           Scrollbar
+           --------------------------------------------------------- */
+
+        html.dark ::-webkit-scrollbar-track {
+            background: #111827;
+        }
+
+        html.dark ::-webkit-scrollbar-thumb {
+            background: #374151;
+        }
+
+        html.dark ::-webkit-scrollbar-thumb:hover {
+            background: #4b5563;
+        }
+
+        /* =========================================================
+       DARK MODE - SIDEBAR FIX
+       ========================================================= */
+
+        /* ---------------------------------------------------------
+           ANA SIDEBAR
+           --------------------------------------------------------- */
+
+        html.dark #sidebar {
+            background-color: #0f172a !important;
+            border-color: #1e293b !important;
+        }
+
+
+        /* Sidebar içerisindeki genel yazılar */
+
+        html.dark .sidebar-item {
+            color: #cbd5e1 !important;
+        }
+
+        html.dark .sidebar-item i {
+            color: #94a3b8;
+        }
+
+        html.dark .sidebar-item:hover {
+            background-color: #1e293b !important;
+            color: #ffffff !important;
+        }
+
+        html.dark .sidebar-item.active {
+            background-color: #2B2E72 !important;
+            color: #ffffff !important;
+        }
+
+
+        /* ---------------------------------------------------------
+           SIDEBAR BAŞLIKLARI
+           --------------------------------------------------------- */
+
+        html.dark .text-gray-400 {
+            color: #94a3b8 !important;
+        }
+
+        html.dark .text-gray-500 {
+            color: #94a3b8 !important;
+        }
+
+        html.dark .text-gray-600 {
+            color: #cbd5e1 !important;
+        }
+
+        html.dark .text-gray-700 {
+            color: #e2e8f0 !important;
+        }
+
+        html.dark .text-gray-800 {
+            color: #f1f5f9 !important;
+        }
+
+        html.dark .text-gray-900 {
+            color: #f8fafc !important;
+        }
+
+
+        /* ---------------------------------------------------------
+           AIPage LOGO YAZISI
+           --------------------------------------------------------- */
+
+        html.dark .text-\[\#2B2E72\] {
+            color: #818cf8 !important;
+        }
+
+
+        /* ---------------------------------------------------------
+           PROFİL KARTI
+           --------------------------------------------------------- */
+
+        html.dark .profile-card {
+            background-color: #1e293b !important;
+            border-color: #334155 !important;
+            color: #f1f5f9 !important;
+        }
+
+        html.dark .profile-card .text-gray-800 {
+            color: #f8fafc !important;
+        }
+
+        html.dark .profile-card .text-gray-400 {
+            color: #94a3b8 !important;
+        }
+
+        html.dark .profile-card:hover {
+            background-color: #263449 !important;
+        }
+
+
+        /* ---------------------------------------------------------
+           YENİ SOHBET
+           --------------------------------------------------------- */
+
+        html.dark .new-chat-button {
+            background-color: #1e293b !important;
+            border-color: #334155 !important;
+            color: #c7d2fe !important;
+        }
+
+        html.dark .new-chat-button:hover {
+            background-color: #293548 !important;
+            border-color: #4f46e5 !important;
+        }
+
+
+        /* ---------------------------------------------------------
+           SON ARAMALAR
+           --------------------------------------------------------- */
+
+        html.dark #recentSearches button {
+            color: #cbd5e1 !important;
+        }
+
+        html.dark #recentSearches button:hover {
+            background-color: #1e293b !important;
+            color: #ffffff !important;
+        }
+
+
+        /* ---------------------------------------------------------
+           ALT SIDEBAR KARTI
+           --------------------------------------------------------- */
+
+        html.dark .sidebar-info {
+            background-color: #1e293b !important;
+            border-color: #334155 !important;
+        }
+
+        html.dark .sidebar-info .text-gray-700 {
+            color: #f1f5f9 !important;
+        }
+
+        html.dark .sidebar-info .text-gray-400 {
+            color: #94a3b8 !important;
+        }
+
+
+        /* ---------------------------------------------------------
+           DARK MODE BUTONU
+           --------------------------------------------------------- */
+
+        html.dark .dark-mode-toggle {
+            color: #cbd5e1 !important;
+        }
+
+        html.dark .dark-mode-toggle:hover {
+            background-color: #1e293b !important;
+            color: #ffffff !important;
+        }
+
+
+        /* ---------------------------------------------------------
+           MOBİL HEADER
+           --------------------------------------------------------- */
+
+        html.dark .md\:hidden {
+            background-color: #0f172a !important;
+            border-color: #1e293b !important;
+        }
+
+        html.dark .md\:hidden .text-gray-600 {
+            color: #cbd5e1 !important;
+        }
+
+
+        /* ---------------------------------------------------------
+           WELCOME SCREEN
+           --------------------------------------------------------- */
+
+        html.dark #welcomeScreen h1 {
+            color: #818cf8 !important;
+        }
+
+        html.dark #welcomeScreen p {
+            color: #94a3b8 !important;
+        }
+
+        html.dark .welcome-card {
+            background-color: #1e293b !important;
+            border-color: #334155 !important;
+            color: #cbd5e1 !important;
+        }
+
+        html.dark .welcome-card:hover {
+            background-color: #263449 !important;
+            border-color: #475569 !important;
+        }
+
+        html.dark .welcome-card .text-gray-700 {
+            color: #f1f5f9 !important;
+        }
+
+        html.dark .welcome-card .text-gray-400 {
+            color: #94a3b8 !important;
+        }
+
+
+        /* ---------------------------------------------------------
+           PROMPT BAR
+           --------------------------------------------------------- */
+
+        html.dark .prompt-bar {
+            background-color: #1e293b !important;
+            border-color: #334155 !important;
+        }
+
+        html.dark .prompt-bar:focus-within {
+            background-color: #1e293b !important;
+        }
+
+        html.dark #promptInput {
+            color: #f8fafc !important;
+        }
+
+        html.dark #promptInput::placeholder {
+            color: #64748b !important;
+        }
+
+
+        /* ---------------------------------------------------------
+           DOSYA BUTONU
+           --------------------------------------------------------- */
+
+        html.dark .prompt-bar label {
+            color: #94a3b8 !important;
+        }
+
+        html.dark .prompt-bar label:hover {
+            background-color: #334155 !important;
+            color: #ffffff !important;
+        }
+
+
+        /* ---------------------------------------------------------
+           ALT UYARI
+           --------------------------------------------------------- */
+
+        html.dark .text-center.text-xs.text-gray-400 {
+            color: #64748b !important;
+        }
+
+
+        /* ---------------------------------------------------------
+           CHAT ARKA PLANI
+           --------------------------------------------------------- */
+
+        html.dark #chatBox {
+            background-color: #111827;
+        }
+
+
+        /* ---------------------------------------------------------
+           AI MESSAGE
+           --------------------------------------------------------- */
+
+        html.dark .ai-message-wrapper .ai-content {
+            background-color: #1e293b !important;
+            border-color: #334155 !important;
+            color: #e2e8f0 !important;
+        }
+
+
+        /* ---------------------------------------------------------
+           LOADING
+           --------------------------------------------------------- */
+
+        html.dark .chat-message .bg-white {
+            background-color: #1e293b !important;
+            border-color: #334155 !important;
+            color: #cbd5e1 !important;
+        }
+
+
+        /* ---------------------------------------------------------
+           SCROLLBAR
+           --------------------------------------------------------- */
+
+        html.dark ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+
+        html.dark ::-webkit-scrollbar-thumb {
+            background: #334155;
+        }
+
+        html.dark ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+
+
+        /* =========================================================
+       DARK MODE - TABLE HOVER FIX
+       ========================================================= */
+
+        html.dark .ai-content table tbody tr:hover,
+        html.dark .ai-content table tbody tr:hover td {
+            background-color: #263449 !important;
+            color: #e2e8f0 !important;
+        }
+
+        html.dark .ai-content table tbody tr:nth-child(even):hover,
+        html.dark .ai-content table tbody tr:nth-child(even):hover td {
+            background-color: #263449 !important;
+        }
+
+        html.dark .ai-content table td,
+        html.dark .ai-content table th {
+            border-color: #334155 !important;
+        }
+
+        html.dark .ai-content table tbody tr {
+            transition: background-color 0.15s ease;
+        }
+
+        html.dark #chatBox + div {
+            background-color: #111827 !important;
+            border-color: #1e293b !important;
+        }
+
+
+        html.dark main > div:last-child {
+            background-color: #111827 !important;
+            border-color: #1e293b !important;
+        }
+
+
+        html.dark main > div:last-child .text-gray-400 {
+            color: #64748b !important;
+        }
+
+        html.dark #chatWarning {
+            background-color: #111827 !important;
+            border-color: #1e293b !important;
+        }
+
+        /* =========================================================
+       DARK MODE - ALT UYARI BAR
+       ========================================================= */
+
+        html.dark #chatWarning {
+            background-color: #111827 !important;
+            border-color: #1e293b !important;
+        }
+
+        html.dark #chatWarning .text-gray-400 {
+            color: #64748b !important;
+        }
+
+
+        /* =========================================================
+           SIDEBAR - HAFİF ZOOM / HOVER EFEKTİ
+           ========================================================= */
+
+        .sidebar-item {
+            transition:
+                    transform 0.18s ease,
+                    background-color 0.18s ease,
+                    color 0.18s ease,
+                    box-shadow 0.18s ease;
+
+            transform-origin: center;
+        }
+
+        .sidebar-item:hover {
+            transform: scale(1.025);
+        }
+
+
+        /* =========================================================
+        SIDEBAR - LIGHT MODE HOVER
+        ========================================================= */
+
+        .sidebar-item {
+            transition:
+                    transform 0.18s ease,
+                    background-color 0.18s ease,
+                    color 0.18s ease,
+                    box-shadow 0.18s ease;
+
+            transform-origin: center;
+        }
+
+        .sidebar-item:hover {
+            transform: scale(1.025);
+
+            background-color: #f1f2f8 !important;
+
+            color: #2B2E72 !important;
+
+            box-shadow:
+                    0 2px 8px rgba(43, 46, 114, 0.06);
+        }
+
+
+        /* =========================================================
+           DARK MODE HOVER
+           ========================================================= */
+
+        html.dark .sidebar-item:hover {
+            background-color: #1e293b !important;
+
+            color: #ffffff !important;
+
+            transform: scale(1.025);
+
+            box-shadow:
+                    0 4px 12px rgba(0, 0, 0, 0.18);
+        }
+
+
+        /* Aktif menü fazla büyümesin */
+        .sidebar-item.active:hover {
+            transform: scale(1.01);
+        }
+
+
+        /* Aktif menü fazla büyümesin */
+        .sidebar-item.active:hover {
+            transform: scale(1.01);
+        }
+
+               /* =========================================================
+                  ALT INPUT ALANI - DARK MODE
+                  ========================================================= */
+
+               /* Input alanının arkasındaki beyaz gradienti kaldır */
+           html.dark .absolute.bottom-0 {
+               background: linear-gradient(
+                       to top,
+                       #111827 0%,
+                       #111827 75%,
+                       rgba(17, 24, 39, 0) 100%
+               ) !important;
+           }
+
+        /* Alt uyarı yazısı */
+        html.dark #chatWarning {
+            background: transparent !important;
+            border: none !important;
+            color: #64748b !important;
+
+            font-size: 11px !important;
+            line-height: 1.4 !important;
+            text-align: center;
+
+            margin-top: 8px;
+        }
+
+        /* Uyarı yazısının içindeki olası span/metinler */
+        html.dark #chatWarning * {
+            color: #64748b !important;
+        }
+
+        /* =========================================================
+           LIGHT MODE - ALT UYARI
+           ========================================================= */
+
+        #chatWarning {
+            color: #9ca3af;
+            font-size: 11px;
+            line-height: 1.4;
+            text-align: center;
+            margin-top: 8px;
+        }
+
+        /* =========================================================
+           ALT INPUT ALANI - DARK MODE GEÇİŞİ
+           ========================================================= */
+
+        html.dark .prompt-bar {
+            background-color: #1e293b !important;
+            border-color: #334155 !important;
+        }
+
+        /* Input alanının altındaki bölüm tamamen koyu */
+        html.dark .prompt-bar + #chatWarning {
+            background: transparent !important;
+        }
+

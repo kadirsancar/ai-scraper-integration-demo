@@ -6,6 +6,7 @@ import com.kadir.aipage.mcp.scraper.ECommerceScraper;
 import com.kadir.aipage.repository.ScraperLogRepository;
 import com.kadir.aipage.service.ProductTrackingService;
 import org.springframework.stereotype.Component;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -121,24 +122,35 @@ public class ECommerceTool {
                     info.getDiscountInfo()
             );
 
+            /*
+             * URL'yi de sonucu içinde taşıyoruz.
+             * AiChatService bu URL'yi OpenRouter cevabından bağımsız
+             * olarak kullanıcıya tekrar ekleyecek.
+             */
             return String.format(
                     "Ürün: %s | Güncel Fiyat: %s TL | "
                             + "Önceki Fiyat: %s TL | İndirim: %s | "
-                            + "Platform: %s | Süre: %s",
+                            + "Platform: %s | Süre: %s | "
+                            + "PRODUCT_URL:%s",
 
                     info.getProductName(),
                     info.getCurrentPrice(),
 
                     info.getOriginalPrice() != null
                             ? info.getOriginalPrice()
-                            : "Yok",
+                            : "-",
 
                     info.getDiscountInfo() != null
+                            && !info.getDiscountInfo().isBlank()
                             ? info.getDiscountInfo()
-                            : "Yok",
+                            : "-",
 
                     info.getPlatform(),
-                    formattedTime
+                    formattedTime,
+
+                    info.getProductUrl() != null
+                            ? info.getProductUrl()
+                            : ""
             );
         }
 
@@ -166,7 +178,10 @@ public class ECommerceTool {
         List<CompletableFuture<ProductPriceInfo>> futures =
                 new ArrayList<>();
 
-        // Her scraper ayrı thread üzerinde çalışır
+        // =====================================================
+        // HER SCRAPER AYRI THREAD ÜZERİNDE ÇALIŞIR
+        // =====================================================
+
         for (ECommerceScraper scraper : scrapers) {
 
             CompletableFuture<ProductPriceInfo> future =
@@ -232,7 +247,10 @@ public class ECommerceTool {
             futures.add(future);
         }
 
-        // Tüm scraper'ların bitmesini bekle
+        // =====================================================
+        // TÜM SCRAPER'LARIN BİTMESİNİ BEKLE
+        // =====================================================
+
         List<ProductPriceInfo> results = new ArrayList<>();
 
         for (CompletableFuture<ProductPriceInfo> future : futures) {
@@ -281,73 +299,124 @@ public class ECommerceTool {
         for (ProductPriceInfo info : results) {
 
             if (info.getCurrentPrice()
-                    .compareTo(cheapestProduct.getCurrentPrice()) < 0) {
+                    .compareTo(
+                            cheapestProduct.getCurrentPrice()
+                    ) < 0) {
 
                 cheapestProduct = info;
             }
         }
 
         // =====================================================
-        // SONUÇ
+        // MARKDOWN TABLOSU
         // =====================================================
 
         StringBuilder result = new StringBuilder();
 
         result.append(
-                "Ürün: "
+                "## 🛒 "
                         + productName
-                        + "\n\n"
+                        + " - Fiyat Karşılaştırması\n\n"
         );
 
         result.append(
-                "Platform sonuçları:\n\n"
+                "| Site | Ürün | Fiyat | Eski Fiyat | İndirim |\n"
+        );
+
+        result.append(
+                "|---|---|---:|---:|---:|\n"
         );
 
         for (ProductPriceInfo info : results) {
 
+            String price =
+                    formatPrice(
+                            info.getCurrentPrice()
+                    );
+
+            String originalPrice =
+                    info.getOriginalPrice() != null
+                            ? formatPrice(
+                            info.getOriginalPrice()
+                    ) + " TL"
+                            : "-";
+
+            String discount =
+                    info.getDiscountInfo() != null
+                            && !info.getDiscountInfo().isBlank()
+                            ? info.getDiscountInfo()
+                            : "-";
+
             result.append(
-                    String.format(
-                            "- %s\n"
-                                    + "  Ürün: %s\n"
-                                    + "  Güncel Fiyat: %s TL\n"
-                                    + "  Önceki Fiyat: %s TL\n"
-                                    + "  İndirim: %s\n"
-                                    + "  URL: %s\n\n",
-
-                            info.getPlatform(),
-                            info.getProductName(),
-                            info.getCurrentPrice(),
-
-                            info.getOriginalPrice() != null
-                                    ? info.getOriginalPrice()
-                                    : "Yok",
-
-                            info.getDiscountInfo() != null
-                                    ? info.getDiscountInfo()
-                                    : "Yok",
-
-                            info.getProductUrl()
+                    "| "
+                            + escapeMarkdown(
+                            info.getPlatform()
                     )
+                            + " | "
+                            + escapeMarkdown(
+                            info.getProductName()
+                    )
+                            + " | "
+                            + price
+                            + " TL | "
+                            + originalPrice
+                            + " | "
+                            + escapeMarkdown(discount)
+                            + " |\n"
             );
         }
 
+        // =====================================================
+        // EN UCUZ FİYAT
+        // =====================================================
+
+        String cheapestPrice =
+                formatPrice(
+                        cheapestProduct.getCurrentPrice()
+                );
+
+        result.append("\n");
+
         result.append(
-                "EN UCUZ FİYAT:\n"
+                "### 💰 En Ucuz Fiyat\n\n"
         );
 
         result.append(
-                String.format(
-                        "%s - %s TL\n",
-                        cheapestProduct.getPlatform(),
-                        cheapestProduct.getCurrentPrice()
+                "**"
+                        + escapeMarkdown(
+                        cheapestProduct.getPlatform()
                 )
+                        + "** - "
+                        + cheapestPrice
+                        + " TL\n"
         );
 
         result.append(
                 "Ürün: "
-                        + cheapestProduct.getProductName()
+                        + escapeMarkdown(
+                        cheapestProduct.getProductName()
+                )
                         + "\n"
         );
+
+        /*
+         * ÖNEMLİ:
+         *
+         * URL'yi Markdown link olarak vermiyoruz.
+         *
+         * PRODUCT_URL etiketi sayesinde AiChatService gerçek
+         * scraper URL'sini OpenRouter cevabından bağımsız
+         * şekilde alabiliyor.
+         */
+        if (cheapestProduct.getProductUrl() != null
+                && !cheapestProduct.getProductUrl().isBlank()) {
+
+            result.append(
+                    "PRODUCT_URL:"
+                            + cheapestProduct.getProductUrl()
+                            + "\n"
+            );
+        }
 
         result.append(
                 "Toplam tarama süresi: "
@@ -418,6 +487,38 @@ public class ECommerceTool {
         log.setCreatedAt(LocalDateTime.now());
 
         scraperLogRepository.save(log);
+    }
+
+    // =========================================================
+    // FİYAT FORMATLAMA
+    // =========================================================
+
+    private String formatPrice(
+            java.math.BigDecimal price) {
+
+        if (price == null) {
+            return "Yok";
+        }
+
+        return price.stripTrailingZeros()
+                .toPlainString()
+                .replace(".", ",");
+    }
+
+    // =========================================================
+    // MARKDOWN KARAKTERLERİNİ ESCAPE ET
+    // =========================================================
+
+    private String escapeMarkdown(String text) {
+
+        if (text == null) {
+            return "";
+        }
+
+        return text
+                .replace("|", "\\|")
+                .replace("\n", " ")
+                .replace("\r", " ");
     }
 
     // =========================================================
